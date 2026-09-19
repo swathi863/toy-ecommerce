@@ -2,8 +2,8 @@ package com.toyland.ecommerce.controller;
 
 import com.toyland.ecommerce.dto.ApiResponse;
 import com.toyland.ecommerce.dto.BusinessSummaryDto;
-import com.toyland.ecommerce.model.OrderStatus;
 import com.toyland.ecommerce.model.Order;
+import com.toyland.ecommerce.model.OrderStatus;
 import com.toyland.ecommerce.model.Role;
 import com.toyland.ecommerce.model.User;
 import com.toyland.ecommerce.repository.OrderRepository;
@@ -11,14 +11,15 @@ import com.toyland.ecommerce.repository.ProductRepository;
 import com.toyland.ecommerce.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.TextStyle;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -103,22 +104,40 @@ public class AdminBusinessController {
     }
 
     @GetMapping("/daily")
-    public ResponseEntity<?> getDailyBusiness(Authentication authentication) {
+    public ResponseEntity<?> getDailyBusiness(
+            @RequestParam(value = "date", required = false) String dateStr,
+            Authentication authentication) {
         try {
             verifyAdmin(authentication);
             List<Order> paidOrders = getPaidOrders();
-            LocalDate today = LocalDate.now();
 
-            BigDecimal daily = BigDecimal.ZERO;
+            LocalDate selectedDate;
+            if (dateStr != null && !dateStr.trim().isEmpty()) {
+                try {
+                    selectedDate = LocalDate.parse(dateStr.trim());
+                } catch (Exception e) {
+                    selectedDate = LocalDate.now();
+                }
+            } else {
+                selectedDate = LocalDate.now();
+            }
+
+            BigDecimal totalSales = BigDecimal.ZERO;
+            long ordersCount = 0;
+
             for (Order order : paidOrders) {
-                if (order.getCreatedAt() != null && order.getCreatedAt().toLocalDate().isEqual(today)) {
-                    daily = daily.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                if (order.getCreatedAt() != null && order.getCreatedAt().toLocalDate().isEqual(selectedDate)) {
+                    totalSales = totalSales.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                    ordersCount++;
                 }
             }
 
             Map<String, Object> response = new HashMap<>();
-            response.put("dailyBusiness", daily);
-            response.put("date", today.toString());
+            response.put("period", "daily");
+            response.put("date", selectedDate.toString());
+            response.put("totalSales", totalSales);
+            response.put("ordersCount", ordersCount);
+            response.put("dailyBusiness", totalSales);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(403).body(new ApiResponse(false, e.getMessage()));
@@ -126,25 +145,42 @@ public class AdminBusinessController {
     }
 
     @GetMapping("/monthly")
-    public ResponseEntity<?> getMonthlyBusiness(Authentication authentication) {
+    public ResponseEntity<?> getMonthlyBusiness(
+            @RequestParam(value = "year", required = false) Integer yearParam,
+            @RequestParam(value = "month", required = false) Integer monthParam,
+            Authentication authentication) {
         try {
             verifyAdmin(authentication);
             List<Order> paidOrders = getPaidOrders();
-            LocalDate today = LocalDate.now();
 
-            BigDecimal monthly = BigDecimal.ZERO;
+            LocalDate today = LocalDate.now();
+            int selectedYear = (yearParam != null && yearParam > 2000) ? yearParam : today.getYear();
+            int selectedMonth = (monthParam != null && monthParam >= 1 && monthParam <= 12) ? monthParam : today.getMonthValue();
+
+            BigDecimal totalSales = BigDecimal.ZERO;
+            long ordersCount = 0;
+
             for (Order order : paidOrders) {
                 if (order.getCreatedAt() != null) {
                     LocalDate orderDate = order.getCreatedAt().toLocalDate();
-                    if (orderDate.getYear() == today.getYear() && orderDate.getMonth() == today.getMonth()) {
-                        monthly = monthly.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                    if (orderDate.getYear() == selectedYear && orderDate.getMonthValue() == selectedMonth) {
+                        totalSales = totalSales.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                        ordersCount++;
                     }
                 }
             }
 
+            Month monthEnum = Month.of(selectedMonth);
+            String monthName = monthEnum.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
             Map<String, Object> response = new HashMap<>();
-            response.put("monthlyBusiness", monthly);
-            response.put("month", today.getMonth().toString() + " " + today.getYear());
+            response.put("period", "monthly");
+            response.put("year", selectedYear);
+            response.put("month", selectedMonth);
+            response.put("monthName", monthName);
+            response.put("totalSales", totalSales);
+            response.put("ordersCount", ordersCount);
+            response.put("monthlyBusiness", totalSales);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(403).body(new ApiResponse(false, e.getMessage()));
@@ -152,22 +188,31 @@ public class AdminBusinessController {
     }
 
     @GetMapping("/yearly")
-    public ResponseEntity<?> getYearlyBusiness(Authentication authentication) {
+    public ResponseEntity<?> getYearlyBusiness(
+            @RequestParam(value = "year", required = false) Integer yearParam,
+            Authentication authentication) {
         try {
             verifyAdmin(authentication);
             List<Order> paidOrders = getPaidOrders();
-            LocalDate today = LocalDate.now();
 
-            BigDecimal yearly = BigDecimal.ZERO;
+            int selectedYear = (yearParam != null && yearParam > 2000) ? yearParam : LocalDate.now().getYear();
+
+            BigDecimal totalSales = BigDecimal.ZERO;
+            long ordersCount = 0;
+
             for (Order order : paidOrders) {
-                if (order.getCreatedAt() != null && order.getCreatedAt().getYear() == today.getYear()) {
-                    yearly = yearly.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                if (order.getCreatedAt() != null && order.getCreatedAt().getYear() == selectedYear) {
+                    totalSales = totalSales.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                    ordersCount++;
                 }
             }
 
             Map<String, Object> response = new HashMap<>();
-            response.put("yearlyBusiness", yearly);
-            response.put("year", today.getYear());
+            response.put("period", "yearly");
+            response.put("year", selectedYear);
+            response.put("totalSales", totalSales);
+            response.put("ordersCount", ordersCount);
+            response.put("yearlyBusiness", totalSales);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(403).body(new ApiResponse(false, e.getMessage()));
@@ -180,13 +225,19 @@ public class AdminBusinessController {
             verifyAdmin(authentication);
             List<Order> paidOrders = getPaidOrders();
 
-            BigDecimal overall = BigDecimal.ZERO;
+            BigDecimal totalSales = BigDecimal.ZERO;
+            long ordersCount = 0;
+
             for (Order order : paidOrders) {
-                overall = overall.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                totalSales = totalSales.add(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+                ordersCount++;
             }
 
             Map<String, Object> response = new HashMap<>();
-            response.put("overallBusiness", overall);
+            response.put("period", "overall");
+            response.put("totalSales", totalSales);
+            response.put("ordersCount", ordersCount);
+            response.put("overallBusiness", totalSales);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(403).body(new ApiResponse(false, e.getMessage()));

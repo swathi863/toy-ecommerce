@@ -300,8 +300,9 @@ export const getAdminBusinessSummaryApi = async () => {
   return data;
 };
 
-export const getAdminDailyBusinessApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/business/daily`, {
+export const getAdminDailyBusinessApi = async (date) => {
+  const query = date ? `?date=${encodeURIComponent(date)}` : '';
+  const response = await fetch(`${API_BASE_URL}/admin/business/daily${query}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -309,8 +310,12 @@ export const getAdminDailyBusinessApi = async () => {
   return data;
 };
 
-export const getAdminMonthlyBusinessApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/business/monthly`, {
+export const getAdminMonthlyBusinessApi = async (year, month) => {
+  const params = new URLSearchParams();
+  if (year) params.append('year', year);
+  if (month) params.append('month', month);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const response = await fetch(`${API_BASE_URL}/admin/business/monthly${query}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -318,8 +323,9 @@ export const getAdminMonthlyBusinessApi = async () => {
   return data;
 };
 
-export const getAdminYearlyBusinessApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/business/yearly`, {
+export const getAdminYearlyBusinessApi = async (year) => {
+  const query = year ? `?year=${encodeURIComponent(year)}` : '';
+  const response = await fetch(`${API_BASE_URL}/admin/business/yearly${query}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
