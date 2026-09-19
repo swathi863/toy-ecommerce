@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, LogOut, User as UserIcon } from 'lucide-react';
+import { Search, ShoppingBag, LogOut, User as UserIcon, Package } from 'lucide-react';
 
 export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,6 +68,14 @@ export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) 
             </Link>
           )}
 
+          {/* My Orders Link */}
+          {user && (
+            <Link to="/orders" className="header-logout-btn" style={{ textDecoration: 'none', background: '#F1F5F9', color: 'var(--primary)', borderColor: '#CBD5E1' }} title="My Orders">
+              <Package size={18} />
+              <span>My Orders</span>
+            </Link>
+          )}
+
           {/* Logout Button */}
           {user && (
             <button
@@ -87,4 +95,3 @@ export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) 
     </header>
   );
 }
-

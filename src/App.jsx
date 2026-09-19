@@ -4,6 +4,7 @@ import SiteHeader from './components/SiteHeader';
 import HomePage from './pages/HomePage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CartPage from './pages/CartPage';
+import OrdersPage from './pages/OrdersPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -156,6 +157,15 @@ function AppContent() {
             }
           />
           <Route
+            path="/orders"
+            element={
+              <OrdersPage
+                user={user}
+                onShowToast={showToast}
+              />
+            }
+          />
+          <Route
             path="/login"
             element={
               <LoginPage
@@ -188,4 +198,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

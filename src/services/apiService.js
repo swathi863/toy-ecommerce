@@ -210,12 +210,37 @@ export const checkoutApi = async () => {
 };
 
 export const getUserOrdersApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/orders`, {
+  const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
     headers: getAuthHeaders()
   });
   if (!response.ok) throw new Error('Failed to fetch orders');
   return await response.json();
 };
+
+export const getMyOrdersApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
+    headers: getAuthHeaders()
+  });
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+    throw new Error('Failed to fetch your orders');
+  }
+  return await response.json();
+};
+
+export const getOrderByIdApi = async (orderId) => {
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to fetch order details');
+  }
+  return data;
+};
+
 
 /* Payment APIs (Protected) */
 
