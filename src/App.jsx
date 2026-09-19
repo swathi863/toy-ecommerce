@@ -11,6 +11,15 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import Toast from './components/Toast';
 import { getCurrentUserApi, getCartApi, logoutUserApi } from './services/apiService';
 
+// Admin Imports
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminBusinessPage from './pages/admin/AdminBusinessPage';
+
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -88,11 +97,12 @@ function AppContent() {
   };
 
   const isAuthPage = ['/login', '/register', '/forgot-password'].includes(location.pathname);
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
     <div className="app-viewport" style={{ background: '#ffffff', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Header bar shown on main shop pages */}
-      {!isAuthPage && (
+      {/* Customer Header bar shown on main shop pages */}
+      {!isAuthPage && !isAdminRoute && (
         <SiteHeader
           user={user}
           cartItemCount={cartItemCount}
@@ -103,6 +113,7 @@ function AppContent() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Routes>
+          {/* Customer Routes */}
           <Route
             path="/"
             element={
@@ -182,6 +193,58 @@ function AppContent() {
             path="/forgot-password"
             element={<ForgotPasswordPage onShowToast={showToast} />}
           />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminLoginPage
+                onAdminLoginSuccess={handleLoginSuccess}
+                onShowToast={showToast}
+              />
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminLayout user={user} onLogout={handleLogout}>
+                <AdminDashboardPage onShowToast={showToast} />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/admin/products"
+            element={
+              <AdminLayout user={user} onLogout={handleLogout}>
+                <AdminProductsPage onShowToast={showToast} />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminLayout user={user} onLogout={handleLogout}>
+                <AdminUsersPage currentUser={user} onShowToast={showToast} />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <AdminLayout user={user} onLogout={handleLogout}>
+                <AdminOrdersPage onShowToast={showToast} />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/admin/business"
+            element={
+              <AdminLayout user={user} onLogout={handleLogout}>
+                <AdminBusinessPage onShowToast={showToast} />
+              </AdminLayout>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </main>

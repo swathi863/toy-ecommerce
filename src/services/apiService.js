@@ -279,3 +279,152 @@ export const verifyPaymentApi = async (paymentPayload) => {
   return data;
 };
 
+/* Admin APIs (Admin Role Protected) */
+
+export const adminLoginApi = async (credentials) => {
+  const data = await loginUserApi(credentials);
+  if (data.role !== 'ADMIN') {
+    localStorage.removeItem('toyland_jwt_token');
+    localStorage.removeItem('toyland_user_details');
+    throw new Error('You do not have permission to access the admin panel.');
+  }
+  return data;
+};
+
+export const getAdminBusinessSummaryApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/business/summary`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch business summary');
+  return data;
+};
+
+export const getAdminDailyBusinessApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/business/daily`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch daily business');
+  return data;
+};
+
+export const getAdminMonthlyBusinessApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/business/monthly`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch monthly business');
+  return data;
+};
+
+export const getAdminYearlyBusinessApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/business/yearly`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch yearly business');
+  return data;
+};
+
+export const getAdminOverallBusinessApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/business/overall`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch overall business');
+  return data;
+};
+
+export const getAdminProductsApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/products`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch admin products');
+  return data;
+};
+
+export const createAdminProductApi = async (productData) => {
+  const response = await fetch(`${API_BASE_URL}/admin/products`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(productData)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to create product');
+  return data;
+};
+
+export const updateAdminProductApi = async (productId, productData) => {
+  const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(productData)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to update product');
+  return data;
+};
+
+export const deleteAdminProductApi = async (productId) => {
+  const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to delete product');
+  return data;
+};
+
+export const getAdminUsersApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/users`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch admin users');
+  return data;
+};
+
+export const updateAdminUserApi = async (userId, userData) => {
+  const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(userData)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to update user');
+  return data;
+};
+
+export const deleteAdminUserApi = async (userId) => {
+  const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to delete user');
+  return data;
+};
+
+export const getAdminOrdersApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/orders`, {
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch admin orders');
+  return data;
+};
+
+export const updateAdminOrderStatusApi = async (orderId, status) => {
+  const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to update order status');
+  return data;
+};
+
+

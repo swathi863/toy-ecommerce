@@ -176,12 +176,23 @@ body {
   text-decoration: none;
   background: transparent;
   border: none;
-  cursor: pointer;
 }
 
-.user-profile-btn:hover {
+.header-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #FFFFFF;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.header-nav-link:hover {
   color: #F59E0B;
 }
+
 
 .header-logout-btn {
   background: rgba(255, 255, 255, 0.12);

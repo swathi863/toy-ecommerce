@@ -32,6 +32,17 @@ export default function OrdersPage({ user, onShowToast }) {
     fetchOrders();
   }, [user]);
 
+  const getUserDisplayName = (usr) => {
+    if (!usr) return 'User';
+    if (usr.name && usr.name.trim()) return usr.name;
+    if (usr.userName && usr.userName.trim()) return usr.userName;
+    if (usr.email) {
+      const namePart = usr.email.split('@')[0];
+      return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    }
+    return 'User';
+  };
+
   if (!user) {
     return (
       <div className="cart-page-container" style={{ textAlign: 'center', padding: '4rem 0' }}>
@@ -49,7 +60,7 @@ export default function OrdersPage({ user, onShowToast }) {
   if (loading) {
     return (
       <div className="cart-page-container" style={{ textAlign: 'center', padding: '4rem 0' }}>
-        <p style={{ color: 'var(--text-muted)' }}>Loading your order history...</p>
+        <p style={{ color: 'var(--text-muted)' }}>Loading order history for {getUserDisplayName(user)}...</p>
       </div>
     );
   }
@@ -125,6 +136,8 @@ export default function OrdersPage({ user, onShowToast }) {
     );
   };
 
+  const displayName = getUserDisplayName(user);
+
   return (
     <div className="cart-page-container" style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>
       <Link to="/home" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '1.5rem', fontWeight: 600 }}>
@@ -135,10 +148,10 @@ export default function OrdersPage({ user, onShowToast }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div>
           <h1 className="auth-heading" style={{ fontSize: '1.8rem', textAlign: 'left', margin: 0, color: 'var(--primary)' }}>
-            My Orders
+            👤 {displayName}'s Orders
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.2rem 0 0', fontSize: '0.92rem' }}>
-            View and track all your Toyland purchases
+            Account: <strong>{user?.email || displayName}</strong>
           </p>
         </div>
 
@@ -157,7 +170,7 @@ export default function OrdersPage({ user, onShowToast }) {
       {orders.length === 0 ? (
         <div className="cart-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
           <Package size={56} color="var(--text-light)" style={{ marginBottom: '1rem' }} />
-          <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>No Orders Found</h3>
+          <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>No Orders Found for {displayName}</h3>
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
             You haven't placed any orders yet. Start exploring our wonderful toy collection!
           </p>

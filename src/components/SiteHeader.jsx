@@ -13,16 +13,18 @@ export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) 
     }
   };
 
-  const getUserDisplayName = (user) => {
-    if (!user) return 'User';
-    if (user.name && user.name.trim()) return user.name;
-    if (user.userName && user.userName.trim()) return user.userName;
-    if (user.email) {
-      const namePart = user.email.split('@')[0];
+  const getUserDisplayName = (usr) => {
+    if (!usr) return '';
+    if (usr.name && usr.name.trim()) return usr.name;
+    if (usr.userName && usr.userName.trim()) return usr.userName;
+    if (usr.email) {
+      const namePart = usr.email.split('@')[0];
       return namePart.charAt(0).toUpperCase() + namePart.slice(1);
     }
-    return 'User';
+    return '';
   };
+
+  const displayName = getUserDisplayName(user);
 
   return (
     <header className="site-header">
@@ -55,11 +57,11 @@ export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) 
             {cartItemCount > 0 && <span className="cart-badge-count">{cartItemCount}</span>}
           </Link>
 
-          {/* User Profile Badge */}
+          {/* Separate User Name Display */}
           {user ? (
-            <div className="user-profile-btn">
+            <div className="user-profile-btn" style={{ cursor: 'default' }}>
               <UserIcon size={20} />
-              <span>{getUserDisplayName(user)}</span>
+              <span>{displayName}</span>
             </div>
           ) : (
             <Link to="/login" className="user-profile-btn" style={{ textDecoration: 'none' }}>
@@ -68,15 +70,15 @@ export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) 
             </Link>
           )}
 
-          {/* My Orders Link */}
+          {/* Separate My Orders Navigation Link */}
           {user && (
-            <Link to="/orders" className="header-logout-btn" style={{ textDecoration: 'none', background: '#F1F5F9', color: 'var(--primary)', borderColor: '#CBD5E1' }} title="My Orders">
+            <Link to="/orders" className="header-nav-link" title="My Orders">
               <Package size={18} />
               <span>My Orders</span>
             </Link>
           )}
 
-          {/* Logout Button */}
+          {/* Separate Logout Button */}
           {user && (
             <button
               onClick={() => {
