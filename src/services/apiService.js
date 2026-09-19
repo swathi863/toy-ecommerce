@@ -216,3 +216,41 @@ export const getUserOrdersApi = async () => {
   if (!response.ok) throw new Error('Failed to fetch orders');
   return await response.json();
 };
+
+/* Payment APIs (Protected) */
+
+export const createPaymentOrderApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/payment/create-order`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    let msg = data.message || 'Failed to initialize payment.';
+    if (/sql|exception|database|jwt|hibernate|class|java|column/i.test(msg)) {
+      msg = 'Unable to process checkout right now. Please try again.';
+    }
+    throw new Error(msg);
+  }
+  return data;
+};
+
+export const verifyPaymentApi = async (paymentPayload) => {
+  const response = await fetch(`${API_BASE_URL}/payment/verify`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(paymentPayload)
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    let msg = data.message || 'Payment verification failed.';
+    if (/sql|exception|database|jwt|hibernate|class|java|column/i.test(msg)) {
+      msg = 'Payment verification failed. Please try again.';
+    }
+    throw new Error(msg);
+  }
+  return data;
+};
+

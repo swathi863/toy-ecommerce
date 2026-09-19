@@ -30,6 +30,9 @@ dependencies {
 	
 	// MySQL Connector
 	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	// Razorpay Java SDK
+	implementation 'com.razorpay:razorpay-java:1.4.6'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
