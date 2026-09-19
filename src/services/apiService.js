@@ -92,6 +92,20 @@ export const getCurrentUserApi = async () => {
   return await response.json();
 };
 
+export const logoutUserApi = async () => {
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+  } catch (err) {
+    console.error('Logout API call failed:', err);
+  } finally {
+    localStorage.removeItem('toyland_jwt_token');
+    localStorage.removeItem('toyland_user_details');
+  }
+};
+
 /* Categories & Products APIs */
 
 export const getCategoriesApi = async () => {

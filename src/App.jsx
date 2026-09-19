@@ -8,7 +8,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import Toast from './components/Toast';
-import { getCurrentUserApi, getCartApi } from './services/apiService';
+import { getCurrentUserApi, getCartApi, logoutUserApi } from './services/apiService';
 
 function AppContent() {
   const location = useLocation();
@@ -72,9 +72,8 @@ function AppContent() {
     fetchCartCount();
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('toyland_jwt_token');
-    localStorage.removeItem('toyland_user_details');
+  const handleLogout = async () => {
+    await logoutUserApi();
     setUser(null);
     setCartItemCount(0);
     showToast('info', 'Logged Out', 'You have been logged out safely.');

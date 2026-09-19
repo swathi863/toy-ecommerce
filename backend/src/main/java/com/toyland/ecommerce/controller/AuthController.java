@@ -54,4 +54,13 @@ public class AuthController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String email = authentication.getName();
+            authService.logoutUser(email);
+        }
+        return ResponseEntity.ok(new ApiResponse(true, "Logged out successfully!"));
+    }
 }

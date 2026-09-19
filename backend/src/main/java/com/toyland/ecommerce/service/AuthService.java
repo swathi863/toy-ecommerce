@@ -84,6 +84,14 @@ public class AuthService {
         return new AuthResponse(tokenStr, user.getUserId(), user.getUserName(), user.getEmail(), user.getRole());
     }
 
+    @Transactional
+    public void logoutUser(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            jwtTokenRepository.findByUserUserId(user.getUserId())
+                    .ifPresent(jwtTokenRepository::delete);
+        });
+    }
+
     private void saveOrUpdateJwtToken(User user, String tokenStr) {
         Optional<JwtToken> existingTokenOpt = jwtTokenRepository.findByUserUserId(user.getUserId());
         JwtToken jwtToken;
