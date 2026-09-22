@@ -5,7 +5,9 @@ npm-debug.log*
 
 # Node dependencies & builds
 node_modules
+frontend/node_modules
 dist
+frontend/dist
 dist-ssr
 *.local
 

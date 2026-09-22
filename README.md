@@ -1,16 +1,54 @@
-# React + Vite
+# Toyland E-Commerce Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A complete, full-stack e-commerce application for Toyland featuring Customer shopping experience, Razorpay test payment integration, order history tracking, and a comprehensive Admin Panel with real-time business analytics.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The project is cleanly separated into 3 core directories:
 
-## React Compiler
+```
+Toys/
+├── frontend/    # React + Vite frontend application
+├── backend/     # Spring Boot + Java backend API application
+└── database/    # MySQL schema, dump files, and setup instructions
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 1. Frontend (`/frontend`)
+Built with **React**, **Vite**, **Vanilla CSS**, and **Lucide Icons**.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### How to Run Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Access the application in your browser at `http://localhost:5173/`.
+
+---
+
+## 2. Backend (`/backend`)
+Built with **Spring Boot 3**, **Java 22**, **Spring Security**, and **JWT Authentication**.
+
+### How to Run Backend:
+```bash
+cd backend
+./gradlew bootRun
+```
+The REST API server runs at `http://localhost:8080/`.
+
+---
+
+## 3. Database (`/database`)
+Uses **MySQL Database** (`stringstacks_ecommerce`).
+
+### Database Setup:
+1. Create the database:
+   ```sql
+   CREATE DATABASE IF NOT EXISTS stringstacks_ecommerce;
+   ```
+2. Import the SQL dump:
+   ```bash
+   mysql -u root -p stringstacks_ecommerce < database/schema.sql
+   ```
