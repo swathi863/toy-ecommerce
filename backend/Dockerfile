@@ -1,5 +1,5 @@
 # Build stage
-FROM gradle:8.10-jdk17 AS build
+FROM gradle:8.10-jdk22 AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN chmod +x gradlew
 RUN ./gradlew clean build -x test
 
 # Run stage
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:22-jre
 
 WORKDIR /app
 
