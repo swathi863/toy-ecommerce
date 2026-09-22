@@ -1,0 +1,7 @@
+toy-ecommerce/
+└── frontend/
+    ├── src/
+    ├── public/
+    ├── package.json
+    ├── vite.config.js
+    └── vercel.json   ← new
