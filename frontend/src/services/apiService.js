@@ -3,7 +3,8 @@
  * Connects React frontend to Spring Boot backend at http://localhost:8080/api
  */
 
-export const API_BASE_URL = 'http://localhost:8080/api';
+
+export const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('toyland_jwt_token');
