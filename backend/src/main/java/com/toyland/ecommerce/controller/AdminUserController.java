@@ -3,8 +3,12 @@ package com.toyland.ecommerce.controller;
 import com.toyland.ecommerce.dto.AdminUpdateUserRequest;
 import com.toyland.ecommerce.dto.AdminUserDto;
 import com.toyland.ecommerce.dto.ApiResponse;
+import com.toyland.ecommerce.model.Order;
 import com.toyland.ecommerce.model.Role;
 import com.toyland.ecommerce.model.User;
+import com.toyland.ecommerce.repository.CartItemRepository;
+import com.toyland.ecommerce.repository.JwtTokenRepository;
+import com.toyland.ecommerce.repository.OrderRepository;
 import com.toyland.ecommerce.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +25,18 @@ import java.util.stream.Collectors;
 public class AdminUserController {
 
     private final UserRepository userRepository;
+    private final JwtTokenRepository jwtTokenRepository;
+    private final CartItemRepository cartItemRepository;
+    private final OrderRepository orderRepository;
 
-    public AdminUserController(UserRepository userRepository) {
+    public AdminUserController(UserRepository userRepository,
+                               JwtTokenRepository jwtTokenRepository,
+                               CartItemRepository cartItemRepository,
+                               OrderRepository orderRepository) {
         this.userRepository = userRepository;
+        this.jwtTokenRepository = jwtTokenRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.orderRepository = orderRepository;
     }
 
     private User verifyAdmin(Authentication authentication) {
@@ -116,10 +129,20 @@ public class AdminUserController {
             User targetUser = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
 
+            // Clean up child table foreign-key references before deleting user
+            jwtTokenRepository.deleteByUserUserId(userId);
+            cartItemRepository.deleteByUserUserId(userId);
+
+            List<Order> userOrders = orderRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
+            for (Order order : userOrders) {
+                order.setUser(null);
+                orderRepository.save(order);
+            }
+
             userRepository.delete(targetUser);
             return ResponseEntity.ok(new ApiResponse(true, "User deleted successfully!"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage() != null ? e.getMessage() : "Failed to delete user account."));
         }
     }
 }
