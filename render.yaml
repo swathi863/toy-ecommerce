@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: toyland-backend
+    env: java
+    rootDir: backend
+    buildCommand: ./gradlew bootJar
+    startCommand: java -jar build/libs/app.jar
+    envVars:
+      - key: JAVA_VERSION
+        value: 22
+      - key: PORT
+        value: 8080
