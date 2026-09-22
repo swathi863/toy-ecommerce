@@ -107,6 +107,66 @@ export const logoutUserApi = async () => {
   }
 };
 
+export const forgotPasswordApi = async (email) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      let msg = data.message || 'Failed to send password reset email.';
+      if (/sql|exception|database|jwt|hibernate|class|java|column/i.test(msg)) {
+        msg = 'Unable to process reset request. Please try again later.';
+      }
+      throw new Error(msg);
+    }
+    return data;
+  } catch (err) {
+    if (err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
+      throw new Error('Unable to connect to authentication server. Please try again later.');
+    }
+    throw err;
+  }
+};
+
+export const resetPasswordApi = async (token, newPassword) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      let msg = data.message || 'Failed to reset password.';
+      if (/sql|exception|database|jwt|hibernate|class|java|column/i.test(msg)) {
+        msg = 'Unable to reset password right now. Please try again later.';
+      }
+      throw new Error(msg);
+    }
+    return data;
+  } catch (err) {
+    if (err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
+      throw new Error('Unable to connect to authentication server. Please try again later.');
+    }
+    throw err;
+  }
+};
+
+export const validateResetTokenApi = async (token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
+    const data = await response.json();
+    return data.success;
+  } catch (err) {
+    return false;
+  }
+};
+
 /* Categories & Products APIs */
 
 export const getCategoriesApi = async () => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, ArrowLeft, Send } from 'lucide-react';
+import { forgotPasswordApi } from '../services/apiService';
 
 export default function ForgotPasswordPage({ onShowToast }) {
   const [email, setEmail] = useState('');
@@ -21,18 +22,27 @@ export default function ForgotPasswordPage({ onShowToast }) {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setError('');
+
+    try {
+      const res = await forgotPasswordApi(email.trim());
       setIsSent(true);
       if (onShowToast) {
-        onShowToast('success', 'Reset Link Sent', `Password reset instructions sent to ${email}`);
+        onShowToast('success', 'Reset Link Sent', res.message || `Password reset instructions sent to ${email}`);
       }
-    }, 600);
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email. Please try again.');
+      if (onShowToast) {
+        onShowToast('error', 'Request Failed', err.message || 'Failed to send reset email.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,26 +55,27 @@ export default function ForgotPasswordPage({ onShowToast }) {
 
         <h1 className="auth-heading">Forgot Password</h1>
         <p className="auth-subtext">
-          Enter your registered email to receive a password reset link.
+          Enter your registered email address to receive a password reset link.
         </p>
 
         {!isSent ? (
           <form onSubmit={handleSubmit} className="pure-form" noValidate>
             <div className={`field-group ${error ? 'is-invalid' : ''}`}>
               <label className="field-label" htmlFor="reset-email">
-                Email
+                Email Address
               </label>
               <div className="field-input-wrapper">
                 <input
                   id="reset-email"
                   type="email"
                   className="field-input"
-                  placeholder="Enter your email address"
+                  placeholder="Enter your registered email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
                     if (error) setError('');
                   }}
+                  disabled={isSubmitting}
                 />
               </div>
               {error && (
@@ -88,24 +99,24 @@ export default function ForgotPasswordPage({ onShowToast }) {
           <div style={{ textAlign: 'center', margin: '1.5rem 0' }}>
             <div
               style={{
-                width: 48,
-                height: 48,
+                width: 52,
+                height: 52,
                 borderRadius: '50%',
-                background: 'var(--success-bg)',
-                color: 'var(--success)',
+                background: '#ECFDF5',
+                color: '#059669',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem'
               }}
             >
-              <CheckCircle2 size={28} />
+              <CheckCircle2 size={30} />
             </div>
-            <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: 600 }}>
-              Instructions Sent!
+            <p style={{ color: 'var(--primary-navy)', fontSize: '1.05rem', fontWeight: 800 }}>
+              Password Reset Link Sent!
             </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '0.25rem' }}>
-              Check your inbox at <strong>{email}</strong>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.4rem', lineHeight: 1.5 }}>
+              Check your inbox at <strong style={{ color: 'var(--primary-navy)' }}>{email}</strong> for instructions to reset your password.
             </p>
           </div>
         )}

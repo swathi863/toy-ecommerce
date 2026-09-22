@@ -16,6 +16,7 @@ import OrdersPage from './pages/OrdersPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import Toast from './components/Toast';
 
 import {
@@ -263,6 +264,16 @@ function AppContent() {
             path="/forgot-password"
             element={
               <ForgotPasswordPage
+                onShowToast={showToast}
+              />
+            }
+          />
+
+          {/* Reset Password */}
+          <Route
+            path="/reset-password"
+            element={
+              <ResetPasswordPage
                 onShowToast={showToast}
               />
             }
