@@ -1,12 +1,10 @@
 services:
   - type: web
     name: toyland-backend
-    env: java
+    runtime: docker
     rootDir: backend
-    buildCommand: ./gradlew bootJar
-    startCommand: java -jar build/libs/app.jar
+    dockerfilePath: Dockerfile
+    plan: free
     envVars:
-      - key: JAVA_VERSION
-        value: 22
       - key: PORT
         value: 8080
