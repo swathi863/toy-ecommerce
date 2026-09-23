@@ -103,10 +103,16 @@ public class AuthService {
     @Transactional
     public ApiResponse processForgotPassword(String email) {
         String cleanEmail = email.trim().toLowerCase();
+        System.out.println(">>> 🔑 RECEIVED FORGOT PASSWORD REQUEST FOR EMAIL: " + cleanEmail);
+
         User user = userRepository.findByEmail(cleanEmail)
-                .orElseThrow(() -> new IllegalArgumentException("No registered account found with email: " + cleanEmail));
+                .orElseThrow(() -> {
+                    System.err.println(">>> ❌ ERROR: NO REGISTERED USER FOUND FOR EMAIL: " + cleanEmail);
+                    return new IllegalArgumentException("No registered account found with email: " + cleanEmail);
+                });
 
         String tokenStr = UUID.randomUUID().toString();
+
 
         Optional<PasswordResetToken> existingTokenOpt = passwordResetTokenRepository.findByUser(user);
         PasswordResetToken resetToken;
