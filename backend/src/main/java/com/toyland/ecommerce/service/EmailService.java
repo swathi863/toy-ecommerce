@@ -8,6 +8,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CompletableFuture;
+
 @Service
 public class EmailService {
 
@@ -38,10 +40,6 @@ public class EmailService {
         System.out.println("🔑 PASSWORD RESET EMAIL GENERATED FOR: " + toEmail);
         System.out.println("🔗 RESET LINK: " + resetLink);
         System.out.println("================================================================================");
-        logger.info("================================================================================");
-        logger.info("🔑 PASSWORD RESET EMAIL GENERATED FOR: {}", toEmail);
-        logger.info("🔗 RESET LINK: {}", resetLink);
-        logger.info("================================================================================");
 
         if (fromEmail == null || fromEmail.trim().isEmpty()) {
             System.err.println("⚠️ SMTP WARNING: MAIL_USERNAME environment variable is NOT set on Render. Email cannot be sent to inbox via SMTP.");
@@ -55,22 +53,26 @@ public class EmailService {
             return false;
         }
 
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail.trim());
-            message.setTo(toEmail.trim());
-            message.setSubject(subject);
-            message.setText(body);
-            mailSender.send(message);
-            System.out.println("✅ Successfully dispatched SMTP password reset email to " + toEmail);
-            logger.info("✅ Successfully dispatched SMTP password reset email to {}", toEmail);
-            return true;
-        } catch (Exception e) {
-            System.err.println("❌ SMTP ERROR: Failed to send password reset email to " + toEmail + ". Error: " + e.getMessage());
-            logger.error("❌ SMTP ERROR: Failed to send password reset email to {}. Error: {}", toEmail, e.getMessage(), e);
-            return false;
-        }
+        // Asynchronous email dispatch to prevent blocking the user's HTTP request thread
+        CompletableFuture.runAsync(() -> {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(fromEmail.trim());
+                message.setTo(toEmail.trim());
+                message.setSubject(subject);
+                message.setText(body);
+                mailSender.send(message);
+                System.out.println("✅ Successfully dispatched SMTP password reset email to " + toEmail);
+                logger.info("✅ Successfully dispatched SMTP password reset email to {}", toEmail);
+            } catch (Exception e) {
+                System.err.println("❌ SMTP ERROR: Failed to send password reset email to " + toEmail + ". Error: " + e.getMessage());
+                logger.error("❌ SMTP ERROR: Failed to send password reset email to {}. Error: {}", toEmail, e.getMessage(), e);
+            }
+        });
+
+        return true;
     }
 }
+
 
 
