@@ -132,10 +132,18 @@ function AppContent() {
     }
   };
 
+  /*
+   * Public authentication pages.
+   *
+   * These pages do NOT require the user to be logged in.
+   * Reset Password is intentionally included here so it behaves
+   * exactly like Login, Register, and Forgot Password.
+   */
   const isAuthPage = [
     '/login',
     '/register',
-    '/forgot-password'
+    '/forgot-password',
+    '/reset-password'
   ].includes(location.pathname);
 
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -150,7 +158,7 @@ function AppContent() {
         flexDirection: 'column'
       }}
     >
-      {/* Customer Header bar shown on main shop pages */}
+      {/* Customer Header bar shown only on main shop pages */}
       {!isAuthPage && !isAdminRoute && (
         <SiteHeader
           user={user}
@@ -238,6 +246,8 @@ function AppContent() {
             }
           />
 
+          {/* ================= PUBLIC AUTH ROUTES ================= */}
+
           {/* Customer Login */}
           <Route
             path="/login"
@@ -269,7 +279,13 @@ function AppContent() {
             }
           />
 
-          {/* Reset Password */}
+          {/* Reset Password
+              Public page.
+              User does NOT need to be logged in.
+              User does NOT need a Vercel account.
+              Token is provided through:
+              /reset-password?token=TOKEN
+          */}
           <Route
             path="/reset-password"
             element={
