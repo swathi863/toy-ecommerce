@@ -109,8 +109,9 @@ export default function ResetPasswordPage({ onShowToast }) {
             Link Invalid or Expired
           </h1>
           <p className="auth-subtext" style={{ marginBottom: '1.5rem', lineHeight: 1.6 }}>
-            This password reset link is invalid or has expired. Please request a new link to reset your password.
+            This password reset link is invalid or expired. Please request a new link to reset your password.
           </p>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
             <Link to="/forgot-password" className="btn-submit-primary" style={{ display: 'inline-flex', width: '100%', textDecoration: 'none', justifyContent: 'center' }}>
               Request New Reset Link
