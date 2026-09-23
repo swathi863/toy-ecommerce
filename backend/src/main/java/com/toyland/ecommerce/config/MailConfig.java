@@ -11,17 +11,18 @@ import java.util.Properties;
 @Configuration
 public class MailConfig {
 
-    @Value("${spring.mail.host:smtp-relay.brevo.com}")
+    @Value("${spring.mail.host:${SPRING_MAIL_HOST:${MAIL_HOST:smtp-relay.brevo.com}}}")
     private String host;
 
-    @Value("${spring.mail.port:587}")
+    @Value("${spring.mail.port:${SPRING_MAIL_PORT:${MAIL_PORT:587}}}")
     private int port;
 
-    @Value("${spring.mail.username:}")
+    @Value("${spring.mail.username:${SPRING_MAIL_USERNAME:${MAIL_USERNAME:}}}")
     private String username;
 
-    @Value("${spring.mail.password:}")
+    @Value("${spring.mail.password:${SPRING_MAIL_PASSWORD:${MAIL_PASSWORD:}}}")
     private String password;
+
 
     @Bean
     public JavaMailSender javaMailSender() {

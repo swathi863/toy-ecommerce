@@ -23,14 +23,15 @@ public class EmailService {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:}")
+    @Value("${spring.mail.username:${SPRING_MAIL_USERNAME:${MAIL_USERNAME:}}}")
     private String fromEmail;
 
-    @Value("${spring.mail.password:}")
+    @Value("${spring.mail.password:${SPRING_MAIL_PASSWORD:${MAIL_PASSWORD:}}}")
     private String mailPassword;
 
-    @Value("${brevo.api.key:}")
+    @Value("${brevo.api.key:${BREVO_API_KEY:}}")
     private String brevoApiKey;
+
 
     public boolean sendPasswordResetEmail(String toEmail, String userName, String resetLink) {
         String subject = "🔑 Toyland - Reset Your Password";
