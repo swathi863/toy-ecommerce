@@ -39,20 +39,29 @@ public class EmailService {
         logger.info("🔗 RESET LINK: {}", resetLink);
         logger.info("================================================================================");
 
-        if (mailSender != null && fromEmail != null && !fromEmail.trim().isEmpty()) {
-            try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom(fromEmail);
-                message.setTo(toEmail);
-                message.setSubject(subject);
-                message.setText(body);
-                mailSender.send(message);
-                logger.info("Successfully dispatched SMTP password reset email to {}", toEmail);
-                return true;
-            } catch (Exception e) {
-                logger.warn("SMTP email dispatch note (Fallback to link logger): {}", e.getMessage());
-            }
+        if (fromEmail == null || fromEmail.trim().isEmpty()) {
+            logger.warn("⚠️ SMTP WARNING: spring.mail.username (MAIL_USERNAME) is not set. Cannot dispatch email via SMTP.");
+            return false;
         }
-        return true;
+
+        if (mailSender == null) {
+            logger.warn("⚠️ SMTP WARNING: JavaMailSender is not initialized. Cannot dispatch email via SMTP.");
+            return false;
+        }
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail.trim());
+            message.setTo(toEmail.trim());
+            message.setSubject(subject);
+            message.setText(body);
+            mailSender.send(message);
+            logger.info("✅ Successfully dispatched SMTP password reset email to {}", toEmail);
+            return true;
+        } catch (Exception e) {
+            logger.error("❌ SMTP ERROR: Failed to send password reset email to {}. Error: {}", toEmail, e.getMessage(), e);
+            return false;
+        }
     }
 }
+

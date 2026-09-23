@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Mail, AlertCircle, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
 
+import { forgotPasswordApi } from '../services/apiService';
+
 export default function ForgotPasswordForm({ onBackToLogin, onShowToast }) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -20,19 +22,29 @@ export default function ForgotPasswordForm({ onBackToLogin, onShowToast }) {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setError('');
+
+    try {
+      const res = await forgotPasswordApi(email.trim());
       setIsSent(true);
       if (onShowToast) {
-        onShowToast('success', 'Reset Link Sent', `Password reset link sent to ${email}`);
+        onShowToast('success', 'Reset Link Sent', res.message || `Password reset link sent to ${email}`);
       }
-    }, 600);
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email. Please try again.');
+      if (onShowToast) {
+        onShowToast('error', 'Request Failed', err.message || 'Failed to send reset email.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   return (
     <div className="auth-form-container">

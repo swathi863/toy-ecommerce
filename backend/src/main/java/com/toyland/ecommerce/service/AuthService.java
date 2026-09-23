@@ -127,10 +127,15 @@ public class AuthService {
         String resetLink = String.format("%s/reset-password?token=%s", frontendUrl, tokenStr);
 
         // Send email / log link
-        emailService.sendPasswordResetEmail(user.getEmail(), user.getUserName(), resetLink);
+        boolean emailSent = emailService.sendPasswordResetEmail(user.getEmail(), user.getUserName(), resetLink);
+
+        if (!emailSent) {
+            return new ApiResponse(true, "Password reset link generated! (Note: MAIL_USERNAME/MAIL_PASSWORD is not configured on Render. Check Render logs for the link).");
+        }
 
         return new ApiResponse(true, "Password reset instructions sent to " + user.getEmail());
     }
+
 
     @Transactional
     public ApiResponse processResetPassword(ResetPasswordRequest request) {
