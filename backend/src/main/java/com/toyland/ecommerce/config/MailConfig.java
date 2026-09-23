@@ -11,10 +11,10 @@ import java.util.Properties;
 @Configuration
 public class MailConfig {
 
-    @Value("${spring.mail.host:smtp.gmail.com}")
+    @Value("${spring.mail.host:smtp-relay.brevo.com}")
     private String host;
 
-    @Value("${spring.mail.port:465}")
+    @Value("${spring.mail.port:587}")
     private int port;
 
     @Value("${spring.mail.username:}")
@@ -27,10 +27,7 @@ public class MailConfig {
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
-
-        // Force port 465 SSL for cloud deployment compatibility (bypasses Render port 587 blocking)
-        int effectivePort = (port == 587) ? 465 : port;
-        mailSender.setPort(effectivePort);
+        mailSender.setPort(port);
 
         if (username != null && !username.trim().isEmpty()) {
             mailSender.setUsername(username.trim());
@@ -41,15 +38,21 @@ public class MailConfig {
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.ssl.enable", "true");
-        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-        props.put("mail.smtp.socketFactory.port", String.valueOf(effectivePort));
-        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-        props.put("mail.smtp.socketFactory.fallback", "false");
+        
+        if (port == 465) {
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.socketFactory.port", "465");
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        } else {
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
+        }
+
         props.put("mail.smtp.connectiontimeout", "5000");
         props.put("mail.smtp.timeout", "5000");
         props.put("mail.smtp.writetimeout", "5000");
 
         return mailSender;
     }
+
 }
