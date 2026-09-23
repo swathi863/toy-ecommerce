@@ -4,7 +4,9 @@
  */
 
 
-export const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+export const API_BASE_URL = `${rawApiUrl.replace(/\/$/, '')}/api`;
+
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('toyland_jwt_token');
