@@ -119,15 +119,16 @@ public class AuthService {
         if (existingTokenOpt.isPresent()) {
             resetToken = existingTokenOpt.get();
             resetToken.setToken(tokenStr);
-            resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
+            resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
         } else {
             resetToken = new PasswordResetToken(
                     tokenStr,
                     user,
-                    LocalDateTime.now().plusMinutes(30)
+                    LocalDateTime.now().plusMinutes(15)
             );
         }
         passwordResetTokenRepository.save(resetToken);
+
 
         // Build reset link
         String resetLink = String.format("%s/reset-password?token=%s", frontendUrl, tokenStr);

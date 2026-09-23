@@ -23,18 +23,23 @@ public class EmailService {
 
     public boolean sendPasswordResetEmail(String toEmail, String userName, String resetLink) {
         String subject = "🔑 Toyland - Reset Your Password";
+
+        String displayName = (userName != null && !userName.trim().isEmpty()) ? userName.trim() : "Valued Customer";
         String body = String.format(
-                "Hello %s,\n\n" +
-                "You requested a password reset for your Toyland account.\n\n" +
-                "Click the link below to reset your password:\n" +
-                "%s\n\n" +
-                "This reset link is valid for 30 minutes.\n" +
-                "If you did not request a password reset, please ignore this email.\n\n" +
-                "Best regards,\n" +
-                "The Toyland Team",
-                userName != null ? userName : "Valued Customer",
+
+                "Hi %s,\n\n" +
+                "We received a request to reset the password for your Toyland account.\n\n" +
+                "Click the button below to reset your password:\n\n" +
+                "Reset Password: %s\n\n" +
+                "This link will expire in 15 minutes for security reasons.\n\n" +
+                "If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.\n\n" +
+                "If you have any questions, please contact Toyland Support.\n\n" +
+                "Regards,\n" +
+                "Toyland Team",
+                displayName,
                 resetLink
         );
+
 
         System.out.println("================================================================================");
         System.out.println("🔑 PASSWORD RESET EMAIL GENERATED FOR: " + toEmail);
