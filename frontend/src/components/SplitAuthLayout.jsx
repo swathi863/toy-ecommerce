@@ -1,24 +1,14 @@
-import React, { useState } from 'react';
-import toylandAuthBanner from '../assets/toyland-auth-banner.png';
+import React from 'react';
 
 export default function SplitAuthLayout({ children }) {
-  const [imgSrc, setImgSrc] = useState(toylandAuthBanner);
-
-  const handleError = () => {
-    if (imgSrc !== '/toyland-auth-banner.png') {
-      setImgSrc('/toyland-auth-banner.png');
-    }
-  };
-
   return (
     <div className="auth-split-wrapper">
-      {/* LEFT SIDE (50%): Uploaded Toyland Image */}
+      {/* LEFT SIDE (50%): Image from requested URL */}
       <div className="auth-split-left-image-side">
         <img
-          src={imgSrc}
+          src="https://ik.imagekit.io/StringStackSwathi/Educational/Educational/main.png"
           alt="Toyland - Small Toys Big Smiles"
           className="auth-split-main-img"
-          onError={handleError}
         />
       </div>
 
@@ -31,3 +21,4 @@ export default function SplitAuthLayout({ children }) {
     </div>
   );
 }
+
