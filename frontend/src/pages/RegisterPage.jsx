@@ -117,12 +117,7 @@ export default function RegisterPage({ onShowToast }) {
   };
 
   return (
-    <SplitAuthLayout
-      title="Join the Toyland Family"
-      subtitle="Create an account to track your orders, save items to your wishlist, and get exclusive toy offers!"
-      imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
-      badgeEmoji="🎁"
-    >
+    <SplitAuthLayout>
       <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
         {/* Brand Header */}
         <div className="auth-brand-logo" style={{ justifyContent: 'flex-start' }}>

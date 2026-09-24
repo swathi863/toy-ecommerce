@@ -134,12 +134,7 @@ export default function ResetPasswordPage({ onShowToast }) {
 
   if (isValidating) {
     return (
-      <SplitAuthLayout
-        title="Validating Link"
-        subtitle="Verifying your password reset request securely..."
-        imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
-        badgeEmoji="⏳"
-      >
+      <SplitAuthLayout>
         <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0, textAlign: 'left' }}>
           <div
             style={{
@@ -162,12 +157,7 @@ export default function ResetPasswordPage({ onShowToast }) {
 
   if (!isTokenValid) {
     return (
-      <SplitAuthLayout
-        title="Link Expired"
-        subtitle="Password reset links expire for your account's security. Request a new link below."
-        imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
-        badgeEmoji="⚠️"
-      >
+      <SplitAuthLayout>
         <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
           <div
             style={{
@@ -218,12 +208,7 @@ export default function ResetPasswordPage({ onShowToast }) {
 
   if (isResetSuccess) {
     return (
-      <SplitAuthLayout
-        title="Success!"
-        subtitle="Your password has been reset securely. You can now login with your new credentials."
-        imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
-        badgeEmoji="🎉"
-      >
+      <SplitAuthLayout>
         <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
           <div
             style={{
@@ -268,12 +253,7 @@ export default function ResetPasswordPage({ onShowToast }) {
   }
 
   return (
-    <SplitAuthLayout
-      title="Reset Your Password"
-      subtitle="Enter a new secure password for your Toyland account."
-      imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
-      badgeEmoji="🔒"
-    >
+    <SplitAuthLayout>
       <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
         {/* Brand Header */}
         <div className="auth-brand-logo" style={{ justifyContent: 'flex-start' }}>

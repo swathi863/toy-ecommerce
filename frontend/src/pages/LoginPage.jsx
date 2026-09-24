@@ -94,12 +94,7 @@ export default function LoginPage({ onShowToast, onLoginSuccess }) {
   };
 
   return (
-    <SplitAuthLayout
-      title="Welcome to Toyland"
-      subtitle="Login to explore soft teddy bears, action figures, and magical toy collections!"
-      imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
-      badgeEmoji="🧸"
-    >
+    <SplitAuthLayout>
       <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
         {/* Brand Header */}
         <div className="auth-brand-logo" style={{ justifyContent: 'flex-start' }}>

@@ -47,12 +47,7 @@ export default function ForgotPasswordPage({ onShowToast }) {
   };
 
   return (
-    <SplitAuthLayout
-      title="Secure Account Recovery"
-      subtitle="Enter your email to receive a instant password reset link and regain access to Toyland!"
-      imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
-      badgeEmoji="🔑"
-    >
+    <SplitAuthLayout>
       <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
         <div className="auth-brand-logo" style={{ justifyContent: 'flex-start' }}>
           <span className="toy-accent-icon">🔑</span>
