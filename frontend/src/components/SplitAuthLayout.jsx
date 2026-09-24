@@ -1,26 +1,49 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function SplitAuthLayout({ children }) {
   return (
-    <div className="auth-page auth-split-wrapper">
-      {/* LEFT SIDE (50%): Complete Toyland Image */}
-      <div className="auth-image-section auth-split-left-image-side">
-        <img
-          src="https://ik.imagekit.io/StringStackSwathi/Educational/Educational/main.png"
-          alt="Toyland - Small Toys Big Smiles"
-          className="auth-toy-image auth-split-main-img"
-        />
-      </div>
-
-      {/* RIGHT SIDE (50%): Existing Auth Form Content */}
-      <div className="auth-split-right-form-side">
-        <div className="auth-split-form-inner">
-          {children}
+    <div className="auth-page-container">
+      {/* TOP NAVBAR */}
+      <header className="auth-top-navbar">
+        <div className="auth-navbar-brand">
+          <Link to="/" className="auth-brand-link">
+            <span className="auth-brand-emoji">🧸</span>
+            <span className="auth-brand-text">Toyland</span>
+          </Link>
         </div>
-      </div>
+
+        <div className="auth-navbar-action">
+          <Link to="/login" className="auth-signin-link">
+            Sign In
+          </Link>
+        </div>
+      </header>
+
+      {/* CENTERED AUTHENTICATION CARD */}
+      <main className="auth-card-wrapper">
+        <div className="auth-split-card">
+          {/* LEFT SIDE (50%): Complete Toyland Image */}
+          <div className="auth-card-left-image">
+            <img
+              src="https://ik.imagekit.io/StringStackSwathi/Educational/Educational/main.png"
+              alt="Toyland - Small Toys Big Smiles"
+              className="auth-card-img"
+            />
+          </div>
+
+          {/* RIGHT SIDE (50%): Existing Page Form */}
+          <div className="auth-card-right-form">
+            <div className="auth-form-container">
+              {children}
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
+
 
 
 

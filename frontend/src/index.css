@@ -875,155 +875,196 @@ body {
 }
 
 /* ==========================================
-   Split-Screen Authentication Layout (Viewport Height 100vh - Fits 1 Screen)
+   Unified Toyland Authentication Layout
+   (Top Navbar + Centered 50/50 Card)
    ========================================== */
-.auth-page,
+
+.auth-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background: #F8FAFC;
+  font-family: var(--font-main);
+  box-sizing: border-box;
+}
+
+/* 1. TOP NAVBAR */
+.auth-top-navbar {
+  height: 64px;
+  width: 100%;
+  background: #243B6B;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  box-shadow: 0 2px 8px rgba(36, 59, 107, 0.15);
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+.auth-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+.auth-brand-emoji {
+  font-size: 1.5rem;
+}
+
+.auth-brand-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.3px;
+}
+
+.auth-signin-link {
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.45rem 1.1rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.auth-signin-link:hover {
+  background: #F59E0B;
+  color: #FFFFFF;
+}
+
+/* 2. CENTERED AUTHENTICATION CARD */
+.auth-card-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-split-card,
 .auth-split-wrapper {
   display: flex;
   width: 100%;
-  height: 100vh;
-  min-height: 100vh;
-  max-height: 100vh;
+  max-width: 960px;
+  min-height: 540px;
   background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(36, 59, 107, 0.08);
+  border: 1px solid #E2E8F0;
   overflow: hidden;
 }
 
+/* LEFT SIDE 50% */
+.auth-card-left-image,
 .auth-image-section,
 .auth-split-left-image-side {
   flex: 1;
   width: 50%;
-  height: 100vh;
-  max-height: 100vh;
   background: #243B6B;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
+  padding: 1.5rem;
+  box-sizing: border-box;
   overflow: hidden;
-  padding: 0;
 }
 
+.auth-card-img,
 .auth-toy-image,
 .auth-split-main-img {
   width: 100%;
   height: 100%;
+  max-height: 460px;
   object-fit: contain;
   object-position: center;
   display: block;
 }
 
+/* RIGHT SIDE 50% */
+.auth-card-right-form,
 .auth-split-right-form-side {
   flex: 1;
   width: 50%;
-  height: 100vh;
-  max-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 2rem;
+  padding: 2.25rem 2rem;
   background: #FFFFFF;
-  overflow-y: auto;
   box-sizing: border-box;
 }
 
+.auth-form-container,
 .auth-split-form-inner {
   width: 100%;
-  max-width: 420px;
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  max-width: 380px;
 }
 
-/* Compact vertical spacing to ensure all forms fit inside 100vh without scrolling on desktop */
-.auth-split-form-inner .auth-brand-logo {
-  margin-bottom: 0.5rem;
-  font-size: 1.4rem;
-}
-
-.auth-split-form-inner .auth-heading {
-  margin-bottom: 0.2rem;
-  font-size: 1.35rem;
-}
-
-.auth-split-form-inner .auth-subtext {
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
-}
-
-.auth-split-form-inner .pure-form {
-  gap: 0.75rem;
-}
-
-.auth-split-form-inner .field-group {
-  gap: 0.25rem;
-}
-
-.auth-split-form-inner .field-label {
-  font-size: 0.82rem;
-}
-
-.auth-split-form-inner .field-input {
-  padding: 0.55rem 0.8rem;
-  font-size: 0.88rem;
-}
-
-.auth-split-form-inner .btn-submit-primary {
-  padding: 0.65rem 1.2rem;
-  margin-top: 0.2rem;
-  font-size: 0.95rem;
-}
-
-.auth-split-form-inner .auth-footer-text {
-  margin-top: 1rem;
-  font-size: 0.85rem;
-}
-
-/* Responsive Styles */
+/* RESPONSIVE STYLES */
 @media (max-width: 900px) {
-  .auth-page,
-  .auth-split-wrapper {
-    height: auto;
-    min-height: 100vh;
-    max-height: none;
-    overflow-y: auto;
-    flex-direction: column;
+  .auth-top-navbar {
+    padding: 0 1.25rem;
+    height: 58px;
   }
 
+  .auth-card-wrapper {
+    padding: 1.25rem 1rem;
+    align-items: flex-start;
+  }
+
+  .auth-split-card,
+  .auth-split-wrapper {
+    flex-direction: column;
+    max-width: 500px;
+    min-height: auto;
+  }
+
+  .auth-card-left-image,
   .auth-image-section,
   .auth-split-left-image-side {
     width: 100%;
     height: 240px;
     min-height: 240px;
-    max-height: 240px;
-    padding: 0;
+    padding: 1rem;
   }
 
-  .auth-split-right-form-side {
-    width: 100%;
-    height: auto;
-    max-height: none;
-    padding: 2rem 1.5rem;
-    overflow-y: visible;
-  }
-
+  .auth-card-img,
   .auth-toy-image,
   .auth-split-main-img {
-    height: 100%;
-    min-height: 240px;
+    max-height: 220px;
+    min-height: auto;
+  }
+
+  .auth-card-right-form,
+  .auth-split-right-form-side {
+    width: 100%;
+    padding: 2rem 1.5rem;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
+  .auth-card-left-image,
   .auth-image-section,
   .auth-split-left-image-side {
-    height: 180px;
-    min-height: 180px;
-    max-height: 180px;
+    height: 190px;
+    min-height: 190px;
   }
 
+  .auth-card-img,
   .auth-toy-image,
   .auth-split-main-img {
-    min-height: 180px;
+    max-height: 170px;
+  }
+
+  .auth-card-right-form,
+  .auth-split-right-form-side {
+    padding: 1.5rem 1.25rem;
   }
 }
