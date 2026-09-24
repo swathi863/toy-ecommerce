@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function SplitAuthLayout({ children }) {
   return (
-    <div className="auth-split-wrapper">
+    <div className="auth-page auth-split-wrapper">
       {/* LEFT SIDE (50%): Image from requested URL */}
       <div className="auth-split-left-image-side">
         <img
@@ -21,4 +21,5 @@ export default function SplitAuthLayout({ children }) {
     </div>
   );
 }
+
 
