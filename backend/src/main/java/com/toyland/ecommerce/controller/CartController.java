@@ -20,13 +20,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
+
+    private static final String DEFAULT_PLACEHOLDER_IMAGE = "https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg";
 
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
@@ -58,6 +62,11 @@ public class CartController {
             User user = getAuthenticatedUser(authentication);
             List<CartItem> cartItems = cartItemRepository.findByUserUserId(user.getUserId());
 
+            List<ProductImage> allImages = productImageRepository.findAll();
+            Map<Long, List<ProductImage>> imagesMap = allImages.stream()
+                    .filter(img -> img.getProduct() != null && img.getProduct().getProductId() != null)
+                    .collect(Collectors.groupingBy(img -> img.getProduct().getProductId()));
+
             List<CartItemDto> itemDtos = cartItems.stream().map(item -> {
                 CartItemDto dto = new CartItemDto();
                 dto.setCartId(item.getCartId());
@@ -71,11 +80,11 @@ public class CartController {
                 BigDecimal totalItemPrice = item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
                 dto.setTotalItemPrice(totalItemPrice);
 
-                List<ProductImage> images = productImageRepository.findByProductProductId(item.getProduct().getProductId());
+                List<ProductImage> images = imagesMap.getOrDefault(item.getProduct().getProductId(), Collections.emptyList());
                 if (!images.isEmpty()) {
                     dto.setImageUrl(images.get(0).getImageUrl());
                 } else {
-                    dto.setImageUrl("https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg");
+                    dto.setImageUrl(DEFAULT_PLACEHOLDER_IMAGE);
                 }
                 return dto;
             }).collect(Collectors.toList());

@@ -8,12 +8,16 @@ import com.toyland.ecommerce.repository.ProductRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+
+    private static final String DEFAULT_PLACEHOLDER_IMAGE = "https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg";
 
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
@@ -26,8 +30,10 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductDto>> getAllProducts() {
         List<Product> products = productRepository.findAll();
+        Map<Long, List<ProductImage>> imagesMap = fetchImagesMap();
+
         List<ProductDto> dtos = products.stream()
-                .map(this::mapToDto)
+                .map(product -> mapToDtoWithImages(product, imagesMap.getOrDefault(product.getProductId(), Collections.emptyList())))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
@@ -35,8 +41,10 @@ public class ProductController {
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductDto>> getProductsByCategory(@PathVariable Long categoryId) {
         List<Product> products = productRepository.findByCategoryCategoryId(categoryId);
+        Map<Long, List<ProductImage>> imagesMap = fetchImagesMap();
+
         List<ProductDto> dtos = products.stream()
-                .map(this::mapToDto)
+                .map(product -> mapToDtoWithImages(product, imagesMap.getOrDefault(product.getProductId(), Collections.emptyList())))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
@@ -44,7 +52,10 @@ public class ProductController {
     @GetMapping("/{productId}")
     public ResponseEntity<?> getProductById(@PathVariable Long productId) {
         return productRepository.findById(productId)
-                .map(product -> ResponseEntity.ok(mapToDto(product)))
+                .map(product -> {
+                    List<ProductImage> images = productImageRepository.findByProductProductId(productId);
+                    return ResponseEntity.ok(mapToDtoWithImages(product, images));
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -60,33 +71,40 @@ public class ProductController {
     @GetMapping("/search")
     public ResponseEntity<List<ProductDto>> searchProducts(@RequestParam String keyword) {
         List<Product> products = productRepository.findByNameContainingIgnoreCase(keyword);
+        Map<Long, List<ProductImage>> imagesMap = fetchImagesMap();
+
         List<ProductDto> dtos = products.stream()
-                .map(this::mapToDto)
+                .map(product -> mapToDtoWithImages(product, imagesMap.getOrDefault(product.getProductId(), Collections.emptyList())))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
-    private ProductDto mapToDto(Product product) {
+    private Map<Long, List<ProductImage>> fetchImagesMap() {
+        List<ProductImage> allImages = productImageRepository.findAll();
+        return allImages.stream()
+                .filter(img -> img.getProduct() != null && img.getProduct().getProductId() != null)
+                .collect(Collectors.groupingBy(img -> img.getProduct().getProductId()));
+    }
+
+    private ProductDto mapToDtoWithImages(Product product, List<ProductImage> images) {
         ProductDto dto = new ProductDto();
         dto.setProductId(product.getProductId());
         dto.setName(product.getName());
         dto.setDescription(product.getDescription());
         dto.setPrice(product.getPrice());
         dto.setStock(product.getStock());
-        
+
         if (product.getCategory() != null) {
             dto.setCategoryId(product.getCategory().getCategoryId());
             dto.setCategoryName(product.getCategory().getCategoryName());
         }
 
-        List<ProductImage> images = productImageRepository.findByProductProductId(product.getProductId());
-        if (!images.isEmpty()) {
+        if (images != null && !images.isEmpty()) {
             dto.setImageUrl(images.get(0).getImageUrl());
             dto.setImages(images.stream().map(ProductImage::getImageUrl).collect(Collectors.toList()));
         } else {
-            // Default placeholder image
-            dto.setImageUrl("https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg");
-            dto.setImages(List.of("https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"));
+            dto.setImageUrl(DEFAULT_PLACEHOLDER_IMAGE);
+            dto.setImages(List.of(DEFAULT_PLACEHOLDER_IMAGE));
         }
 
         return dto;

@@ -169,19 +169,41 @@ export const validateResetTokenApi = async (token) => {
   }
 };
 
-/* Categories & Products APIs */
+/* Categories & Products APIs with In-Memory Caching for Instant Page Transitions */
+
+let categoriesCache = { data: null, timestamp: 0 };
+let productsCache = { data: null, timestamp: 0 };
+const CACHE_TTL_MS = 60000; // 60 seconds TTL
+
+export const clearProductsCache = () => {
+  productsCache = { data: null, timestamp: 0 };
+  categoriesCache = { data: null, timestamp: 0 };
+};
 
 export const getCategoriesApi = async () => {
+  const now = Date.now();
+  if (categoriesCache.data && (now - categoriesCache.timestamp < CACHE_TTL_MS)) {
+    return categoriesCache.data;
+  }
   const response = await fetch(`${API_BASE_URL}/categories`);
   if (!response.ok) throw new Error('Failed to fetch categories');
-  return await response.json();
+  const data = await response.json();
+  categoriesCache = { data, timestamp: now };
+  return data;
 };
 
 export const getProductsApi = async () => {
+  const now = Date.now();
+  if (productsCache.data && (now - productsCache.timestamp < CACHE_TTL_MS)) {
+    return productsCache.data;
+  }
   const response = await fetch(`${API_BASE_URL}/products`);
   if (!response.ok) throw new Error('Failed to fetch products');
-  return await response.json();
+  const data = await response.json();
+  productsCache = { data, timestamp: now };
+  return data;
 };
+
 
 export const getProductsByCategoryApi = async (categoryId) => {
   const response = await fetch(`${API_BASE_URL}/products/category/${categoryId}`);
@@ -422,6 +444,7 @@ export const createAdminProductApi = async (productData) => {
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to create product');
+  clearProductsCache();
   return data;
 };
 
@@ -433,6 +456,7 @@ export const updateAdminProductApi = async (productId, productData) => {
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to update product');
+  clearProductsCache();
   return data;
 };
 
@@ -443,8 +467,10 @@ export const deleteAdminProductApi = async (productId) => {
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to delete product');
+  clearProductsCache();
   return data;
 };
+
 
 export const getAdminUsersApi = async () => {
   const response = await fetch(`${API_BASE_URL}/admin/users`, {

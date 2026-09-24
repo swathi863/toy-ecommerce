@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/orders")
 public class OrderController {
 
+    private static final String DEFAULT_PLACEHOLDER_IMAGE = "https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg";
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
@@ -46,67 +48,77 @@ public class OrderController {
                 .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
     }
 
-    private OrderResponseDto mapToOrderResponseDto(Order order) {
-        List<OrderItem> items = orderItemRepository.findByOrderOrderId(order.getOrderId());
-        
-        BigDecimal subtotal = BigDecimal.ZERO;
-        List<OrderItemResponseDto> itemDtos = new ArrayList<>();
-
-        for (OrderItem item : items) {
-            subtotal = subtotal.add(item.getTotalPrice() != null ? item.getTotalPrice() : BigDecimal.ZERO);
-
-            String imageUrl = "https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg";
-            if (item.getProduct() != null) {
-                List<ProductImage> images = productImageRepository.findByProductProductId(item.getProduct().getProductId());
-                if (!images.isEmpty()) {
-                    imageUrl = images.get(0).getImageUrl();
-                }
-            }
-
-            OrderItemResponseDto itemDto = new OrderItemResponseDto(
-                    item.getOrderItemsId(),
-                    item.getProduct() != null ? item.getProduct().getProductId() : null,
-                    item.getProduct() != null ? item.getProduct().getName() : "Toy Product",
-                    item.getQuantity(),
-                    item.getPricePerUnit(),
-                    item.getTotalPrice(),
-                    imageUrl
-            );
-            itemDtos.add(itemDto);
-        }
-
-        BigDecimal shippingFee = BigDecimal.valueOf(50.00);
-        BigDecimal totalAmount = order.getTotalAmount() != null ? order.getTotalAmount() : subtotal.add(shippingFee);
-
-        String paymentStatus = "Paid";
-        if (order.getStatus() == OrderStatus.FAILED) {
-            paymentStatus = "Failed";
-        } else if (order.getStatus() == OrderStatus.PENDING) {
-            paymentStatus = "Pending";
-        }
-
-
-        return new OrderResponseDto(
-                order.getOrderId(),
-                totalAmount,
-                subtotal,
-                shippingFee,
-                order.getStatus(),
-                paymentStatus,
-                order.getCreatedAt(),
-                itemDtos
-        );
-    }
-
     @GetMapping("/my-orders")
     public ResponseEntity<?> getMyOrders(Authentication authentication) {
         try {
             User user = getAuthenticatedUser(authentication);
             List<Order> orders = orderRepository.findByUserUserIdOrderByCreatedAtDesc(user.getUserId());
-            
-            List<OrderResponseDto> responseDtos = orders.stream()
-                    .map(this::mapToOrderResponseDto)
+            if (orders.isEmpty()) {
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+
+            List<String> orderIds = orders.stream().map(Order::getOrderId).collect(Collectors.toList());
+            List<OrderItem> allOrderItems = orderItemRepository.findAll().stream()
+                    .filter(item -> item.getOrder() != null && orderIds.contains(item.getOrder().getOrderId()))
                     .collect(Collectors.toList());
+
+            Map<String, List<OrderItem>> itemsByOrderId = allOrderItems.stream()
+                    .collect(Collectors.groupingBy(item -> item.getOrder().getOrderId()));
+
+            List<ProductImage> allImages = productImageRepository.findAll();
+            Map<Long, List<ProductImage>> imagesMap = allImages.stream()
+                    .filter(img -> img.getProduct() != null && img.getProduct().getProductId() != null)
+                    .collect(Collectors.groupingBy(img -> img.getProduct().getProductId()));
+
+            List<OrderResponseDto> responseDtos = orders.stream().map(order -> {
+                List<OrderItem> items = itemsByOrderId.getOrDefault(order.getOrderId(), Collections.emptyList());
+                BigDecimal subtotal = BigDecimal.ZERO;
+                List<OrderItemResponseDto> itemDtos = new ArrayList<>();
+
+                for (OrderItem item : items) {
+                    subtotal = subtotal.add(item.getTotalPrice() != null ? item.getTotalPrice() : BigDecimal.ZERO);
+
+                    String imageUrl = DEFAULT_PLACEHOLDER_IMAGE;
+                    if (item.getProduct() != null) {
+                        List<ProductImage> images = imagesMap.getOrDefault(item.getProduct().getProductId(), Collections.emptyList());
+                        if (!images.isEmpty()) {
+                            imageUrl = images.get(0).getImageUrl();
+                        }
+                    }
+
+                    OrderItemResponseDto itemDto = new OrderItemResponseDto(
+                            item.getOrderItemsId(),
+                            item.getProduct() != null ? item.getProduct().getProductId() : null,
+                            item.getProduct() != null ? item.getProduct().getName() : "Toy Product",
+                            item.getQuantity(),
+                            item.getPricePerUnit(),
+                            item.getTotalPrice(),
+                            imageUrl
+                    );
+                    itemDtos.add(itemDto);
+                }
+
+                BigDecimal shippingFee = BigDecimal.valueOf(50.00);
+                BigDecimal totalAmount = order.getTotalAmount() != null ? order.getTotalAmount() : subtotal.add(shippingFee);
+
+                String paymentStatus = "Paid";
+                if (order.getStatus() == OrderStatus.FAILED) {
+                    paymentStatus = "Failed";
+                } else if (order.getStatus() == OrderStatus.PENDING) {
+                    paymentStatus = "Pending";
+                }
+
+                return new OrderResponseDto(
+                        order.getOrderId(),
+                        totalAmount,
+                        subtotal,
+                        shippingFee,
+                        order.getStatus(),
+                        paymentStatus,
+                        order.getCreatedAt(),
+                        itemDtos
+                );
+            }).collect(Collectors.toList());
 
             return ResponseEntity.ok(responseDtos);
         } catch (IllegalArgumentException e) {
@@ -125,7 +137,60 @@ public class OrderController {
                 return ResponseEntity.status(403).body(new ApiResponse(false, "Access denied. You can only view your own orders."));
             }
 
-            return ResponseEntity.ok(mapToOrderResponseDto(order));
+            List<OrderItem> items = orderItemRepository.findByOrderOrderId(order.getOrderId());
+            List<ProductImage> allImages = productImageRepository.findAll();
+            Map<Long, List<ProductImage>> imagesMap = allImages.stream()
+                    .filter(img -> img.getProduct() != null && img.getProduct().getProductId() != null)
+                    .collect(Collectors.groupingBy(img -> img.getProduct().getProductId()));
+
+            BigDecimal subtotal = BigDecimal.ZERO;
+            List<OrderItemResponseDto> itemDtos = new ArrayList<>();
+
+            for (OrderItem item : items) {
+                subtotal = subtotal.add(item.getTotalPrice() != null ? item.getTotalPrice() : BigDecimal.ZERO);
+
+                String imageUrl = DEFAULT_PLACEHOLDER_IMAGE;
+                if (item.getProduct() != null) {
+                    List<ProductImage> images = imagesMap.getOrDefault(item.getProduct().getProductId(), Collections.emptyList());
+                    if (!images.isEmpty()) {
+                        imageUrl = images.get(0).getImageUrl();
+                    }
+                }
+
+                OrderItemResponseDto itemDto = new OrderItemResponseDto(
+                        item.getOrderItemsId(),
+                        item.getProduct() != null ? item.getProduct().getProductId() : null,
+                        item.getProduct() != null ? item.getProduct().getName() : "Toy Product",
+                        item.getQuantity(),
+                        item.getPricePerUnit(),
+                        item.getTotalPrice(),
+                        imageUrl
+                    );
+                itemDtos.add(itemDto);
+            }
+
+            BigDecimal shippingFee = BigDecimal.valueOf(50.00);
+            BigDecimal totalAmount = order.getTotalAmount() != null ? order.getTotalAmount() : subtotal.add(shippingFee);
+
+            String paymentStatus = "Paid";
+            if (order.getStatus() == OrderStatus.FAILED) {
+                paymentStatus = "Failed";
+            } else if (order.getStatus() == OrderStatus.PENDING) {
+                paymentStatus = "Pending";
+            }
+
+            OrderResponseDto responseDto = new OrderResponseDto(
+                    order.getOrderId(),
+                    totalAmount,
+                    subtotal,
+                    shippingFee,
+                    order.getStatus(),
+                    paymentStatus,
+                    order.getCreatedAt(),
+                    itemDtos
+            );
+
+            return ResponseEntity.ok(responseDto);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
         }
