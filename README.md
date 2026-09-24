@@ -40,15 +40,27 @@ The REST API server runs at `http://localhost:8080/`.
 
 ---
 
-## 3. Database (`/database`)
-Uses **MySQL Database** (`stringstacks_ecommerce`).
+## 4. Environment Configuration & Security
 
-### Database Setup:
-1. Create the database:
-   ```sql
-   CREATE DATABASE IF NOT EXISTS stringstacks_ecommerce;
-   ```
-2. Import the SQL dump:
+The project uses externalized environment variables to keep sensitive credentials secure.
+
+### Local Development Setup:
+1. Copy `application-example.properties` to create your local `application.properties`:
    ```bash
-   mysql -u root -p stringstacks_ecommerce < database/schema.sql
+   cp backend/src/main/resources/application-example.properties backend/src/main/resources/application.properties
    ```
+2. Open `backend/src/main/resources/application.properties` and replace placeholder environment variables with your local database & secret key values OR set them in your local OS environment.
+
+### Production Setup (Render / Cloud Hosting):
+Configure the required environment variables directly in your hosting platform (e.g. Render Dashboard under **Environment Variables**):
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `JWT_SECRET`
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `BREVO_API_KEY`
+- `MAIL_USERNAME`
+- `FRONTEND_URL`
+
+> **IMPORTANT SECURITY RULE**: Never commit real database passwords, JWT secrets, or API keys to GitHub. Real `application.properties` files must remain untracked in `.gitignore`.

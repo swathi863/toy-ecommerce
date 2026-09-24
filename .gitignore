@@ -31,3 +31,8 @@ bin/
 *.njsproj
 *.sln
 *.sw?
+
+# Confidential Environment Properties
+backend/src/main/resources/application.properties
+application.properties
+
