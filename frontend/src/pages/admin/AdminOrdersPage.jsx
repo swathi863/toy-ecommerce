@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { getAdminOrdersApi, updateAdminOrderStatusApi } from '../../services/apiService';
-import { ShoppingCart, Clock, CheckCircle2, XCircle, Truck, Package, Filter } from 'lucide-react';
+import { ShoppingCart, Clock, CheckCircle2, XCircle, Truck, Package, Filter, RotateCcw, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function AdminOrdersPage({ onShowToast }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getAdminOrdersApi();
       setOrders(data || []);
     } catch (err) {
+      const msg = err.message || 'Unable to connect to the server. Please try again.';
+      setError(msg);
       if (onShowToast) {
-        onShowToast('error', 'Orders Error', err.message || 'Failed to load customer orders.');
+        onShowToast('error', 'Orders Error', msg);
       }
     } finally {
       setLoading(false);
@@ -63,7 +67,37 @@ export default function AdminOrdersPage({ onShowToast }) {
   };
 
   if (loading) {
-    return <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading customer orders...</div>;
+    return (
+      <div style={{ padding: '4rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', maxWidth: '500px', margin: '3rem auto' }}>
+        <RefreshCw size={36} color="var(--primary-navy)" className="spin" style={{ marginBottom: '1rem' }} />
+        <h3 style={{ color: 'var(--primary-navy)', margin: '0 0 0.5rem', fontWeight: 800 }}>Connecting to Server...</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+          Fetching customer orders. Server may take up to 20-30 seconds to wake up.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '3rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #FCA5A5', maxWidth: '520px', margin: '3rem auto', boxShadow: '0 4px 14px rgba(239, 68, 68, 0.08)' }}>
+        <div style={{ width: '56px', height: '56px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+          <AlertCircle size={32} />
+        </div>
+        <h3 style={{ color: 'var(--primary-navy)', marginBottom: '0.5rem', fontWeight: 800 }}>Unable to Connect to Server</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+          {error}
+        </p>
+        <button
+          onClick={fetchOrders}
+          className="btn-submit-primary"
+          style={{ display: 'inline-flex', width: 'auto', gap: '0.5rem', padding: '0.75rem 1.8rem', margin: '0 auto' }}
+        >
+          <RotateCcw size={18} />
+          <span>Retry Loading Orders</span>
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -159,24 +193,53 @@ export default function AdminOrdersPage({ onShowToast }) {
                 {/* Items List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1rem' }}>
                   {order.items && order.items.length > 0 ? (
-                    order.items.map((item, idx) => (
-                      <div key={item.orderItemsId || idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <img
-                          src={item.imageUrl || 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg'}
-                          alt={item.productName}
-                          style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0', flexShrink: 0 }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 700, color: 'var(--primary-navy)', fontSize: '0.95rem' }}>{item.productName}</div>
-                          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                            Quantity: <strong>{item.quantity}</strong> × {formatCurrency(item.pricePerUnit)}
+                    order.items.map((item, idx) => {
+                      const itemImg = item.imageUrl || (Array.isArray(item.images) && typeof item.images[0] === 'string' ? item.images[0] : item.images?.[0]?.imageUrl);
+
+                      return (
+                        <div key={item.orderItemsId || idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          {itemImg ? (
+                            <img
+                              src={itemImg}
+                              alt={item.productName}
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                              }}
+                              style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0', flexShrink: 0 }}
+                            />
+                          ) : null}
+                          <div
+                            style={{
+                              width: '50px',
+                              height: '50px',
+                              backgroundColor: '#F1F5F9',
+                              color: '#64748B',
+                              borderRadius: '8px',
+                              border: '1px solid #E2E8F0',
+                              display: itemImg ? 'none' : 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              flexShrink: 0
+                            }}
+                          >
+                            No Image
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, color: 'var(--primary-navy)', fontSize: '0.95rem' }}>{item.productName}</div>
+                            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                              Quantity: <strong>{item.quantity}</strong> × {formatCurrency(item.pricePerUnit)}
+                            </div>
+                          </div>
+                          <div style={{ fontWeight: 700, color: 'var(--primary-navy)', fontSize: '0.98rem' }}>
+                            {formatCurrency(item.totalPrice)}
                           </div>
                         </div>
-                        <div style={{ fontWeight: 700, color: 'var(--primary-navy)', fontSize: '0.98rem' }}>
-                          {formatCurrency(item.totalPrice)}
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>Purchased items recorded.</div>
                   )}

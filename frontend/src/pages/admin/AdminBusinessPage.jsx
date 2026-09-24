@@ -47,6 +47,7 @@ export default function AdminBusinessPage({ onShowToast }) {
   const [filteredResult, setFilteredResult] = useState({ totalSales: 0, ordersCount: 0 });
   const [overallSummary, setOverallSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [fetchingFilter, setFetchingFilter] = useState(false);
 
   // Years options array (5 years back to 5 years forward)
@@ -66,6 +67,7 @@ export default function AdminBusinessPage({ onShowToast }) {
   const fetchFilteredBusinessData = async () => {
     try {
       setFetchingFilter(true);
+      setError(null);
       let res;
       if (periodFilter === 'daily') {
         res = await getAdminDailyBusinessApi(selectedDate);
@@ -85,8 +87,10 @@ export default function AdminBusinessPage({ onShowToast }) {
         date: res.date
       });
     } catch (err) {
+      const msg = err.message || 'Unable to connect to the server. Please try again.';
+      setError(msg);
       if (onShowToast) {
-        onShowToast('error', 'Sales Filter Error', err.message || 'Failed to fetch sales analytics.');
+        onShowToast('error', 'Sales Filter Error', msg);
       }
     } finally {
       setFetchingFilter(false);
@@ -134,8 +138,34 @@ export default function AdminBusinessPage({ onShowToast }) {
 
   if (loading) {
     return (
-      <div style={{ padding: '3rem 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-        Calculating business sales analytics...
+      <div style={{ padding: '4rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', maxWidth: '500px', margin: '3rem auto' }}>
+        <RefreshCw size={36} color="var(--primary-navy)" className="spin" style={{ marginBottom: '1rem' }} />
+        <h3 style={{ color: 'var(--primary-navy)', margin: '0 0 0.5rem', fontWeight: 800 }}>Connecting to Server...</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+          Calculating business sales analytics. Server may take up to 20-30 seconds to wake up.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '3rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #FCA5A5', maxWidth: '520px', margin: '3rem auto', boxShadow: '0 4px 14px rgba(239, 68, 68, 0.08)' }}>
+        <div style={{ width: '56px', height: '56px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+          <AlertCircle size={32} />
+        </div>
+        <h3 style={{ color: 'var(--primary-navy)', marginBottom: '0.5rem', fontWeight: 800 }}>Unable to Connect to Server</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+          {error}
+        </p>
+        <button
+          onClick={fetchFilteredBusinessData}
+          className="btn-submit-primary"
+          style={{ display: 'inline-flex', width: 'auto', gap: '0.5rem', padding: '0.75rem 1.8rem', margin: '0 auto' }}
+        >
+          <RotateCcw size={18} />
+          <span>Retry Loading Sales</span>
+        </button>
       </div>
     );
   }

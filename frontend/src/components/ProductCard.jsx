@@ -22,6 +22,10 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
           src={product.imageUrl || 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg'}
           alt={product.name}
           loading="lazy"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg';
+          }}
         />
 
         {onToggleWishlist && (

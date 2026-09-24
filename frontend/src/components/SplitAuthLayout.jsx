@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function SplitAuthLayout({ children }) {
+export default function SplitAuthLayout({ children, isAdmin = false }) {
   return (
     <div className="auth-page-container">
       {/* TOP NAVBAR */}
@@ -14,8 +14,8 @@ export default function SplitAuthLayout({ children }) {
         </div>
 
         <div className="auth-navbar-action">
-          <Link to="/login" className="auth-signin-link">
-            Sign In
+          <Link to={isAdmin ? "/admin" : "/login"} className="auth-signin-link">
+            {isAdmin ? "Admin Sign In" : "Sign In"}
           </Link>
         </div>
       </header>

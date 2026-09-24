@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getAdminProductsApi, createAdminProductApi, updateAdminProductApi, deleteAdminProductApi, getCategoriesApi } from '../../services/apiService';
-import { Plus, Edit, Trash2, X, AlertTriangle, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, X, AlertTriangle, CheckCircle2, Image as ImageIcon, RotateCcw, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function AdminProductsPage({ onShowToast }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Form State
   const [showModal, setShowModal] = useState(false);
@@ -25,6 +26,7 @@ export default function AdminProductsPage({ onShowToast }) {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [prods, cats] = await Promise.all([
         getAdminProductsApi(),
         getCategoriesApi()
@@ -32,8 +34,10 @@ export default function AdminProductsPage({ onShowToast }) {
       setProducts(prods || []);
       setCategories(cats || []);
     } catch (err) {
+      const msg = err.message || 'Unable to connect to the server. Please try again.';
+      setError(msg);
       if (onShowToast) {
-        onShowToast('error', 'Error Loading Data', err.message || 'Failed to load products or categories.');
+        onShowToast('error', 'Error Loading Data', msg);
       }
     } finally {
       setLoading(false);
@@ -59,16 +63,13 @@ export default function AdminProductsPage({ onShowToast }) {
 
   const openEditModal = (product) => {
     setEditingProduct(product);
-    let img = '';
-    if (product.images && product.images.length > 0) {
-      img = product.images[0].imageUrl;
-    }
+    const img = product.imageUrl || (Array.isArray(product.images) && typeof product.images[0] === 'string' ? product.images[0] : product.images?.[0]?.imageUrl || '');
     setFormData({
       name: product.name || '',
       description: product.description || '',
       price: product.price || '',
       stock: product.stock !== undefined ? product.stock : '',
-      categoryId: product.category ? product.category.categoryId : (categories[0]?.categoryId || ''),
+      categoryId: product.categoryId || product.category?.categoryId || (categories[0]?.categoryId || ''),
       imageUrl: img
     });
     setShowModal(true);
@@ -125,7 +126,37 @@ export default function AdminProductsPage({ onShowToast }) {
   };
 
   if (loading) {
-    return <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--text-muted)' }}>Loading products catalog...</div>;
+    return (
+      <div style={{ padding: '4rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', maxWidth: '500px', margin: '3rem auto' }}>
+        <RefreshCw size={36} color="var(--primary-navy)" className="spin" style={{ marginBottom: '1rem' }} />
+        <h3 style={{ color: 'var(--primary-navy)', margin: '0 0 0.5rem', fontWeight: 800 }}>Connecting to Server...</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+          Fetching admin product catalog. Server may take up to 20-30 seconds to wake up.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '3rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #FCA5A5', maxWidth: '520px', margin: '3rem auto', boxShadow: '0 4px 14px rgba(239, 68, 68, 0.08)' }}>
+        <div style={{ width: '56px', height: '56px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+          <AlertCircle size={32} />
+        </div>
+        <h3 style={{ color: 'var(--primary-navy)', marginBottom: '0.5rem', fontWeight: 800 }}>Unable to Connect to Server</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+          {error}
+        </p>
+        <button
+          onClick={fetchData}
+          className="btn-submit-primary"
+          style={{ display: 'inline-flex', width: 'auto', gap: '0.5rem', padding: '0.75rem 1.8rem', margin: '0 auto' }}
+        >
+          <RotateCcw size={18} />
+          <span>Retry Loading Products</span>
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -172,20 +203,42 @@ export default function AdminProductsPage({ onShowToast }) {
               </tr>
             ) : (
               products.map((prod) => {
-                let img = 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg';
-                if (prod.images && prod.images.length > 0) {
-                  img = prod.images[0].imageUrl;
-                }
+                const img = prod.imageUrl || (Array.isArray(prod.images) && typeof prod.images[0] === 'string' ? prod.images[0] : prod.images?.[0]?.imageUrl);
 
                 return (
                   <tr key={prod.productId} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background 0.2s ease' }}>
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <img
-                          src={img}
-                          alt={prod.name}
-                          style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0', flexShrink: 0 }}
-                        />
+                        {img ? (
+                          <img
+                            src={img}
+                            alt={prod.name}
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                            }}
+                            style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0', flexShrink: 0 }}
+                          />
+                        ) : null}
+                        <div
+                          style={{
+                            width: '50px',
+                            height: '50px',
+                            backgroundColor: '#F1F5F9',
+                            color: '#64748B',
+                            borderRadius: '8px',
+                            border: '1px solid #E2E8F0',
+                            display: img ? 'none' : 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}
+                        >
+                          No Image
+                        </div>
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--primary-navy)', fontSize: '0.98rem' }}>{prod.name}</div>
                           <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

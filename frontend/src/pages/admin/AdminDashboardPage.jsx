@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminBusinessSummaryApi } from '../../services/apiService';
-import { Users, Package, ShoppingCart, DollarSign, Calendar, TrendingUp, Award, ArrowUpRight } from 'lucide-react';
+import { Users, Package, ShoppingCart, DollarSign, Calendar, TrendingUp, Award, ArrowUpRight, RotateCcw, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function AdminDashboardPage({ onShowToast }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchSummary = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getAdminBusinessSummaryApi();
       setSummary(data);
     } catch (err) {
+      const msg = err.message || 'Unable to connect to the server. Please try again.';
+      setError(msg);
       if (onShowToast) {
-        onShowToast('error', 'Dashboard Error', err.message || 'Failed to load business summary metrics.');
+        onShowToast('error', 'Dashboard Error', msg);
       }
     } finally {
       setLoading(false);
@@ -35,8 +39,34 @@ export default function AdminDashboardPage({ onShowToast }) {
 
   if (loading) {
     return (
-      <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-        Loading Admin Dashboard Metrics...
+      <div style={{ padding: '4rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', maxWidth: '500px', margin: '3rem auto' }}>
+        <RefreshCw size={36} color="var(--primary-navy)" className="spin" style={{ marginBottom: '1rem' }} />
+        <h3 style={{ color: 'var(--primary-navy)', margin: '0 0 0.5rem', fontWeight: 800 }}>Connecting to Server...</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+          Fetching real-time business metrics. Server may take up to 20-30 seconds to wake up.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '3rem 1.5rem', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #FCA5A5', maxWidth: '520px', margin: '3rem auto', boxShadow: '0 4px 14px rgba(239, 68, 68, 0.08)' }}>
+        <div style={{ width: '56px', height: '56px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+          <AlertCircle size={32} />
+        </div>
+        <h3 style={{ color: 'var(--primary-navy)', marginBottom: '0.5rem', fontWeight: 800 }}>Unable to Connect to Server</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+          {error}
+        </p>
+        <button
+          onClick={fetchSummary}
+          className="btn-submit-primary"
+          style={{ display: 'inline-flex', width: 'auto', gap: '0.5rem', padding: '0.75rem 1.8rem', margin: '0 auto' }}
+        >
+          <RotateCcw size={18} />
+          <span>Retry Loading Dashboard</span>
+        </button>
       </div>
     );
   }

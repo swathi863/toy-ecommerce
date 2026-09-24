@@ -120,7 +120,15 @@ export default function CartPage({ user, onCartUpdated, onShowToast }) {
               return (
                 <div key={item.cartId} className="cart-item-row">
                   <div className="cart-item-thumb">
-                    <img src={item.imageUrl} alt={item.productName} />
+                    <img
+                      src={item.imageUrl || 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg'}
+                      alt={item.productName}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg';
+                      }}
+                    />
                   </div>
 
                   <div className="cart-item-info">

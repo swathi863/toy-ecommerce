@@ -7,6 +7,30 @@
 const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 export const API_BASE_URL = `${rawApiUrl.replace(/\/$/, '')}/api`;
 
+const DEFAULT_TIMEOUT_MS = 30000; // 30s timeout for Render cold starts
+
+const fetchWithTimeout = async (url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Unable to connect to the server. Request timed out while waiting for server to wake up. Please try again.');
+    }
+    if (err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
+      throw new Error('Unable to connect to the server. Please check your connection and try again.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('toyland_jwt_token');
@@ -21,7 +45,7 @@ const getAuthHeaders = () => {
 
 export const registerUserApi = async (userData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
@@ -30,7 +54,6 @@ export const registerUserApi = async (userData) => {
     const data = await response.json();
     if (!response.ok) {
       let msg = data.message || 'Registration failed. Please try again.';
-      // Filter out raw stack traces or internal backend details
       if (/sql|exception|database|jwt|hibernate|class|java|column/i.test(msg)) {
         msg = 'Registration could not be completed. Please check your information and try again.';
       }
@@ -38,16 +61,13 @@ export const registerUserApi = async (userData) => {
     }
     return data;
   } catch (err) {
-    if (err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
-      throw new Error('Unable to connect to registration server. Please try again later.');
-    }
     throw err;
   }
 };
 
 export const loginUserApi = async (credentials) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials)
@@ -56,7 +76,6 @@ export const loginUserApi = async (credentials) => {
     const data = await response.json();
     if (!response.ok) {
       let msg = data.message || 'Invalid email or password.';
-      // Filter out raw stack traces or internal backend details
       if (/sql|exception|database|jwt|hibernate|class|java|column/i.test(msg)) {
         msg = 'Unable to process login. Please try again later.';
       }
@@ -70,9 +89,6 @@ export const loginUserApi = async (credentials) => {
 
     return data;
   } catch (err) {
-    if (err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
-      throw new Error('Unable to connect to authentication server. Please try again later.');
-    }
     throw err;
   }
 };
@@ -81,26 +97,30 @@ export const getCurrentUserApi = async () => {
   const token = localStorage.getItem('toyland_jwt_token');
   if (!token) return null;
 
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    method: 'GET',
-    headers: getAuthHeaders()
-  });
+  try {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/me`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  if (!response.ok) {
-    localStorage.removeItem('toyland_jwt_token');
-    localStorage.removeItem('toyland_user_details');
+    if (!response.ok) {
+      localStorage.removeItem('toyland_jwt_token');
+      localStorage.removeItem('toyland_user_details');
+      return null;
+    }
+
+    return await response.json();
+  } catch (err) {
     return null;
   }
-
-  return await response.json();
 };
 
 export const logoutUserApi = async () => {
   try {
-    await fetch(`${API_BASE_URL}/auth/logout`, {
+    await fetchWithTimeout(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
       headers: getAuthHeaders()
-    });
+    }, 5000);
   } catch (err) {
     console.error('Logout API call failed:', err);
   } finally {
@@ -111,7 +131,7 @@ export const logoutUserApi = async () => {
 
 export const forgotPasswordApi = async (email) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -127,16 +147,13 @@ export const forgotPasswordApi = async (email) => {
     }
     return data;
   } catch (err) {
-    if (err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
-      throw new Error('Unable to connect to authentication server. Please try again later.');
-    }
     throw err;
   }
 };
 
 export const resetPasswordApi = async (token, newPassword) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, newPassword })
@@ -152,16 +169,13 @@ export const resetPasswordApi = async (token, newPassword) => {
     }
     return data;
   } catch (err) {
-    if (err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
-      throw new Error('Unable to connect to authentication server. Please try again later.');
-    }
     throw err;
   }
 };
 
 export const validateResetTokenApi = async (token) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
     const data = await response.json();
     return data.success;
   } catch (err) {
@@ -185,7 +199,7 @@ export const getCategoriesApi = async () => {
   if (categoriesCache.data && (now - categoriesCache.timestamp < CACHE_TTL_MS)) {
     return categoriesCache.data;
   }
-  const response = await fetch(`${API_BASE_URL}/categories`);
+  const response = await fetchWithTimeout(`${API_BASE_URL}/categories`);
   if (!response.ok) throw new Error('Failed to fetch categories');
   const data = await response.json();
   categoriesCache = { data, timestamp: now };
@@ -197,28 +211,27 @@ export const getProductsApi = async () => {
   if (productsCache.data && (now - productsCache.timestamp < CACHE_TTL_MS)) {
     return productsCache.data;
   }
-  const response = await fetch(`${API_BASE_URL}/products`);
+  const response = await fetchWithTimeout(`${API_BASE_URL}/products`);
   if (!response.ok) throw new Error('Failed to fetch products');
   const data = await response.json();
   productsCache = { data, timestamp: now };
   return data;
 };
 
-
 export const getProductsByCategoryApi = async (categoryId) => {
-  const response = await fetch(`${API_BASE_URL}/products/category/${categoryId}`);
+  const response = await fetchWithTimeout(`${API_BASE_URL}/products/category/${categoryId}`);
   if (!response.ok) throw new Error('Failed to fetch products by category');
   return await response.json();
 };
 
 export const getProductByIdApi = async (productId) => {
-  const response = await fetch(`${API_BASE_URL}/products/${productId}`);
+  const response = await fetchWithTimeout(`${API_BASE_URL}/products/${productId}`);
   if (!response.ok) throw new Error('Failed to fetch product details');
   return await response.json();
 };
 
 export const searchProductsApi = async (keyword) => {
-  const response = await fetch(`${API_BASE_URL}/products/search?keyword=${encodeURIComponent(keyword)}`);
+  const response = await fetchWithTimeout(`${API_BASE_URL}/products/search?keyword=${encodeURIComponent(keyword)}`);
   if (!response.ok) throw new Error('Failed to search products');
   return await response.json();
 };
@@ -226,7 +239,7 @@ export const searchProductsApi = async (keyword) => {
 /* Cart APIs (Protected) */
 
 export const getCartApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/cart`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/cart`, {
     headers: getAuthHeaders()
   });
   if (!response.ok) {
@@ -239,7 +252,7 @@ export const getCartApi = async () => {
 };
 
 export const addToCartApi = async (productId, quantity = 1) => {
-  const response = await fetch(`${API_BASE_URL}/cart/items`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/cart/items`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ productId, quantity })
@@ -253,7 +266,7 @@ export const addToCartApi = async (productId, quantity = 1) => {
 };
 
 export const updateCartQuantityApi = async (cartItemId, quantity) => {
-  const response = await fetch(`${API_BASE_URL}/cart/items/${cartItemId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/cart/items/${cartItemId}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ quantity })
@@ -267,7 +280,7 @@ export const updateCartQuantityApi = async (cartItemId, quantity) => {
 };
 
 export const removeCartItemApi = async (cartItemId) => {
-  const response = await fetch(`${API_BASE_URL}/cart/items/${cartItemId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/cart/items/${cartItemId}`, {
     method: 'DELETE',
     headers: getAuthHeaders()
   });
@@ -282,7 +295,7 @@ export const removeCartItemApi = async (cartItemId) => {
 /* Order APIs (Protected) */
 
 export const checkoutApi = async (addressData) => {
-  const response = await fetch(`${API_BASE_URL}/orders/checkout`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/orders/checkout`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: addressData ? JSON.stringify(addressData) : undefined
@@ -296,7 +309,7 @@ export const checkoutApi = async (addressData) => {
 };
 
 export const getUserOrdersApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/orders/my-orders`, {
     headers: getAuthHeaders()
   });
   if (!response.ok) throw new Error('Failed to fetch orders');
@@ -304,7 +317,7 @@ export const getUserOrdersApi = async () => {
 };
 
 export const getMyOrdersApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/orders/my-orders`, {
     headers: getAuthHeaders()
   });
   if (!response.ok) {
@@ -317,7 +330,7 @@ export const getMyOrdersApi = async () => {
 };
 
 export const getOrderByIdApi = async (orderId) => {
-  const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/orders/${orderId}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -328,7 +341,7 @@ export const getOrderByIdApi = async (orderId) => {
 };
 
 export const requestReturnItemApi = async (orderId, orderItemId) => {
-  const response = await fetch(`${API_BASE_URL}/orders/${orderId}/items/${orderItemId}/return`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/orders/${orderId}/items/${orderItemId}/return`, {
     method: 'POST',
     headers: getAuthHeaders()
   });
@@ -342,7 +355,7 @@ export const requestReturnItemApi = async (orderId, orderItemId) => {
 /* Wishlist APIs (Protected) */
 
 export const getWishlistApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/wishlist`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/wishlist`, {
     headers: getAuthHeaders()
   });
   if (!response.ok) {
@@ -355,7 +368,7 @@ export const getWishlistApi = async () => {
 };
 
 export const toggleWishlistApi = async (productId) => {
-  const response = await fetch(`${API_BASE_URL}/wishlist/toggle/${productId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/wishlist/toggle/${productId}`, {
     method: 'POST',
     headers: getAuthHeaders()
   });
@@ -367,7 +380,7 @@ export const toggleWishlistApi = async (productId) => {
 };
 
 export const addToWishlistApi = async (productId) => {
-  const response = await fetch(`${API_BASE_URL}/wishlist/add/${productId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/wishlist/add/${productId}`, {
     method: 'POST',
     headers: getAuthHeaders()
   });
@@ -379,7 +392,7 @@ export const addToWishlistApi = async (productId) => {
 };
 
 export const removeFromWishlistApi = async (productId) => {
-  const response = await fetch(`${API_BASE_URL}/wishlist/remove/${productId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/wishlist/remove/${productId}`, {
     method: 'DELETE',
     headers: getAuthHeaders()
   });
@@ -392,7 +405,7 @@ export const removeFromWishlistApi = async (productId) => {
 
 export const checkWishlistStatusApi = async (productId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/wishlist/check/${productId}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/wishlist/check/${productId}`, {
       headers: getAuthHeaders()
     });
     const data = await response.json();
@@ -402,11 +415,10 @@ export const checkWishlistStatusApi = async (productId) => {
   }
 };
 
-
 /* Payment APIs (Protected) */
 
 export const createPaymentOrderApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/payment/create-order`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/payment/create-order`, {
     method: 'POST',
     headers: getAuthHeaders()
   });
@@ -423,7 +435,7 @@ export const createPaymentOrderApi = async () => {
 };
 
 export const verifyPaymentApi = async (paymentPayload) => {
-  const response = await fetch(`${API_BASE_URL}/payment/verify`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/payment/verify`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(paymentPayload)
@@ -453,7 +465,7 @@ export const adminLoginApi = async (credentials) => {
 };
 
 export const getAdminBusinessSummaryApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/business/summary`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/business/summary`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -463,7 +475,7 @@ export const getAdminBusinessSummaryApi = async () => {
 
 export const getAdminDailyBusinessApi = async (date) => {
   const query = date ? `?date=${encodeURIComponent(date)}` : '';
-  const response = await fetch(`${API_BASE_URL}/admin/business/daily${query}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/business/daily${query}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -476,7 +488,7 @@ export const getAdminMonthlyBusinessApi = async (year, month) => {
   if (year) params.append('year', year);
   if (month) params.append('month', month);
   const query = params.toString() ? `?${params.toString()}` : '';
-  const response = await fetch(`${API_BASE_URL}/admin/business/monthly${query}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/business/monthly${query}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -486,7 +498,7 @@ export const getAdminMonthlyBusinessApi = async (year, month) => {
 
 export const getAdminYearlyBusinessApi = async (year) => {
   const query = year ? `?year=${encodeURIComponent(year)}` : '';
-  const response = await fetch(`${API_BASE_URL}/admin/business/yearly${query}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/business/yearly${query}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -495,7 +507,7 @@ export const getAdminYearlyBusinessApi = async (year) => {
 };
 
 export const getAdminOverallBusinessApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/business/overall`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/business/overall`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -504,7 +516,7 @@ export const getAdminOverallBusinessApi = async () => {
 };
 
 export const getAdminProductsApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/products`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/products`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -513,7 +525,7 @@ export const getAdminProductsApi = async () => {
 };
 
 export const createAdminProductApi = async (productData) => {
-  const response = await fetch(`${API_BASE_URL}/admin/products`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/products`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(productData)
@@ -525,7 +537,7 @@ export const createAdminProductApi = async (productData) => {
 };
 
 export const updateAdminProductApi = async (productId, productData) => {
-  const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/products/${productId}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(productData)
@@ -537,7 +549,7 @@ export const updateAdminProductApi = async (productId, productData) => {
 };
 
 export const deleteAdminProductApi = async (productId) => {
-  const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/products/${productId}`, {
     method: 'DELETE',
     headers: getAuthHeaders()
   });
@@ -547,9 +559,8 @@ export const deleteAdminProductApi = async (productId) => {
   return data;
 };
 
-
 export const getAdminUsersApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/users`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/users`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -558,7 +569,7 @@ export const getAdminUsersApi = async () => {
 };
 
 export const updateAdminUserApi = async (userId, userData) => {
-  const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/users/${userId}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(userData)
@@ -569,7 +580,7 @@ export const updateAdminUserApi = async (userId, userData) => {
 };
 
 export const deleteAdminUserApi = async (userId) => {
-  const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/users/${userId}`, {
     method: 'DELETE',
     headers: getAuthHeaders()
   });
@@ -579,7 +590,7 @@ export const deleteAdminUserApi = async (userId) => {
 };
 
 export const getAdminOrdersApi = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/orders`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/orders`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -588,7 +599,7 @@ export const getAdminOrdersApi = async () => {
 };
 
 export const updateAdminOrderStatusApi = async (orderId, status) => {
-  const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ status })

@@ -153,6 +153,10 @@ export default function WishlistPage({ user, onCartUpdated, onWishlistUpdated, o
                     src={item.imageUrl || 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg'}
                     alt={item.productName}
                     loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg';
+                    }}
                   />
                   <button
                     onClick={() => handleRemoveFromWishlist(item.productId, item.productName)}
