@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class OrderController {
 
     private static final String DEFAULT_PLACEHOLDER_IMAGE = "https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg";
+    private static final int RETURN_PERIOD_DAYS = 10;
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -48,7 +50,28 @@ public class OrderController {
                 .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
     }
 
+    private boolean isWithinReturnPeriod(Order order) {
+        if (order == null || order.getCreatedAt() == null) {
+            return false;
+        }
+        long daysBetween = ChronoUnit.DAYS.between(order.getCreatedAt(), LocalDateTime.now());
+        return daysBetween <= RETURN_PERIOD_DAYS;
+    }
+
+    private void checkAndUpdateRefundStatus(OrderItem item) {
+        if ("RETURN_REQUESTED".equalsIgnoreCase(item.getReturnStatus()) && item.getReturnRequestedAt() != null) {
+            // Auto-transition to REFUND_COMPLETED if 1 day passed or requested on a previous day/date
+            boolean isNextDay = item.getReturnRequestedAt().toLocalDate().isBefore(LocalDateTime.now().toLocalDate())
+                    || item.getReturnRequestedAt().plusMinutes(1).isBefore(LocalDateTime.now());
+            if (isNextDay) {
+                item.setReturnStatus("REFUND_COMPLETED");
+                orderItemRepository.save(item);
+            }
+        }
+    }
+
     @GetMapping("/my-orders")
+    @Transactional
     public ResponseEntity<?> getMyOrders(Authentication authentication) {
         try {
             User user = getAuthenticatedUser(authentication);
@@ -74,8 +97,11 @@ public class OrderController {
                 List<OrderItem> items = itemsByOrderId.getOrDefault(order.getOrderId(), Collections.emptyList());
                 BigDecimal subtotal = BigDecimal.ZERO;
                 List<OrderItemResponseDto> itemDtos = new ArrayList<>();
+                boolean orderEligibleForReturn = isWithinReturnPeriod(order);
 
                 for (OrderItem item : items) {
+                    checkAndUpdateRefundStatus(item);
+
                     subtotal = subtotal.add(item.getTotalPrice() != null ? item.getTotalPrice() : BigDecimal.ZERO);
 
                     String imageUrl = DEFAULT_PLACEHOLDER_IMAGE;
@@ -86,6 +112,9 @@ public class OrderController {
                         }
                     }
 
+                    String currentReturnStatus = item.getReturnStatus();
+                    boolean itemEligible = orderEligibleForReturn && "NONE".equalsIgnoreCase(currentReturnStatus);
+
                     OrderItemResponseDto itemDto = new OrderItemResponseDto(
                             item.getOrderItemsId(),
                             item.getProduct() != null ? item.getProduct().getProductId() : null,
@@ -93,7 +122,10 @@ public class OrderController {
                             item.getQuantity(),
                             item.getPricePerUnit(),
                             item.getTotalPrice(),
-                            imageUrl
+                            imageUrl,
+                            currentReturnStatus,
+                            itemEligible,
+                            item.getReturnRequestedAt()
                     );
                     itemDtos.add(itemDto);
                 }
@@ -127,6 +159,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
+    @Transactional
     public ResponseEntity<?> getOrderById(@PathVariable String orderId, Authentication authentication) {
         try {
             User user = getAuthenticatedUser(authentication);
@@ -145,8 +178,11 @@ public class OrderController {
 
             BigDecimal subtotal = BigDecimal.ZERO;
             List<OrderItemResponseDto> itemDtos = new ArrayList<>();
+            boolean orderEligibleForReturn = isWithinReturnPeriod(order);
 
             for (OrderItem item : items) {
+                checkAndUpdateRefundStatus(item);
+
                 subtotal = subtotal.add(item.getTotalPrice() != null ? item.getTotalPrice() : BigDecimal.ZERO);
 
                 String imageUrl = DEFAULT_PLACEHOLDER_IMAGE;
@@ -157,6 +193,9 @@ public class OrderController {
                     }
                 }
 
+                String currentReturnStatus = item.getReturnStatus();
+                boolean itemEligible = orderEligibleForReturn && "NONE".equalsIgnoreCase(currentReturnStatus);
+
                 OrderItemResponseDto itemDto = new OrderItemResponseDto(
                         item.getOrderItemsId(),
                         item.getProduct() != null ? item.getProduct().getProductId() : null,
@@ -164,8 +203,11 @@ public class OrderController {
                         item.getQuantity(),
                         item.getPricePerUnit(),
                         item.getTotalPrice(),
-                        imageUrl
-                    );
+                        imageUrl,
+                        currentReturnStatus,
+                        itemEligible,
+                        item.getReturnRequestedAt()
+                );
                 itemDtos.add(itemDto);
             }
 
@@ -191,6 +233,49 @@ public class OrderController {
             );
 
             return ResponseEntity.ok(responseDto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{orderId}/items/{orderItemId}/return")
+    @Transactional
+    public ResponseEntity<?> requestReturn(@PathVariable String orderId,
+                                          @PathVariable Long orderItemId,
+                                          Authentication authentication) {
+        try {
+            User user = getAuthenticatedUser(authentication);
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+
+            if (!order.getUser().getUserId().equals(user.getUserId())) {
+                return ResponseEntity.status(403).body(new ApiResponse(false, "Access denied."));
+            }
+
+            if (!isWithinReturnPeriod(order)) {
+                return ResponseEntity.badRequest().body(new ApiResponse(false, "Return period has expired for this order. Returns are only allowed within 10 days."));
+            }
+
+            OrderItem item = orderItemRepository.findById(orderItemId)
+                    .orElseThrow(() -> new IllegalArgumentException("Order item not found with ID: " + orderItemId));
+
+            if (!item.getOrder().getOrderId().equals(order.getOrderId())) {
+                return ResponseEntity.badRequest().body(new ApiResponse(false, "Order item does not belong to this order."));
+            }
+
+            if (!"NONE".equalsIgnoreCase(item.getReturnStatus())) {
+                return ResponseEntity.badRequest().body(new ApiResponse(false, "Return has already been requested for this product."));
+            }
+
+            item.setReturnStatus("RETURN_REQUESTED");
+            item.setReturnRequestedAt(LocalDateTime.now());
+            orderItemRepository.save(item);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("returnStatus", "RETURN_REQUESTED");
+            response.put("message", "Return requested successfully. Your refund will be processed within 1–2 days.");
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
         }

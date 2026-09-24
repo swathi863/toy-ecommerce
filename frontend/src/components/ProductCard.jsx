@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Star, Eye } from 'lucide-react';
+import { ShoppingBag, Star, Heart } from 'lucide-react';
 
-export default function ProductCard({ product, onAddToCart }) {
+export default function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishlist }) {
   const formattedPrice = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -16,13 +16,47 @@ export default function ProductCard({ product, onAddToCart }) {
         <span className="category-badge">{product.categoryName}</span>
       )}
 
-      {/* Product Image */}
-      <div className="product-image-box">
+      {/* Product Image & Wishlist Button */}
+      <div className="product-image-box" style={{ position: 'relative' }}>
         <img
           src={product.imageUrl || 'https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg'}
           alt={product.name}
           loading="lazy"
         />
+
+        {onToggleWishlist && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onToggleWishlist(product);
+            }}
+            title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              background: 'rgba(255, 255, 255, 0.9)',
+              border: 'none',
+              borderRadius: '50%',
+              width: 34,
+              height: 34,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              transition: 'all 0.2s ease',
+              zIndex: 2
+            }}
+          >
+            <Heart
+              size={18}
+              color={isInWishlist ? "#EC4899" : "#64748B"}
+              fill={isInWishlist ? "#EC4899" : "none"}
+            />
+          </button>
+        )}
       </div>
 
       {/* Product Info */}

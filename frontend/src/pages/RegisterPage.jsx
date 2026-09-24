@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { registerUserApi } from '../services/apiService';
+import SplitAuthLayout from '../components/SplitAuthLayout';
 
 export default function RegisterPage({ onShowToast }) {
   const navigate = useNavigate();
@@ -89,7 +90,6 @@ export default function RegisterPage({ onShowToast }) {
     setIsSubmitting(true);
 
     try {
-      // Call API service (POST http://localhost:8080/api/auth/register)
       await registerUserApi({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
@@ -102,11 +102,9 @@ export default function RegisterPage({ onShowToast }) {
         onShowToast('success', 'Account Created!', 'Your account has been created successfully! Please log in.');
       }
 
-      // On successful registration -> redirect to /login with success message
       navigate('/login', { state: { registeredMessage: 'Account created successfully! Please log in.' } });
     } catch (err) {
       setIsSubmitting(false);
-      // Clean user-friendly message, no backend/database/JWT details exposed
       const friendlyMsg = err.message || 'Registration failed. Please check your details and try again.';
       setApiError(friendlyMsg);
 
@@ -114,23 +112,27 @@ export default function RegisterPage({ onShowToast }) {
         onShowToast('error', 'Registration Failed', friendlyMsg);
       }
 
-      // User remains on /register page
       navigate('/register');
     }
   };
 
   return (
-    <div className="page-container">
-      <div className="auth-card-full">
+    <SplitAuthLayout
+      title="Join the Toyland Family"
+      subtitle="Create an account to track your orders, save items to your wishlist, and get exclusive toy offers!"
+      imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
+      badgeEmoji="🎁"
+    >
+      <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
         {/* Brand Header */}
-        <div className="auth-brand-logo">
+        <div className="auth-brand-logo" style={{ justifyContent: 'flex-start' }}>
           <span className="toy-accent-icon">🧸</span>
           <span>Toyland</span>
         </div>
 
         {/* Page Heading */}
-        <h1 className="auth-heading">Create Your Account</h1>
-        <p className="auth-subtext">Join Toyland and discover a world of fun!</p>
+        <h1 className="auth-heading" style={{ textAlign: 'left' }}>Create Your Account</h1>
+        <p className="auth-subtext" style={{ textAlign: 'left' }}>Join Toyland and discover a world of fun!</p>
 
         {/* Error Banner when registration fails */}
         {apiError && (
@@ -294,13 +296,13 @@ export default function RegisterPage({ onShowToast }) {
         </form>
 
         {/* Route to Login */}
-        <div className="auth-footer-text">
+        <div className="auth-footer-text" style={{ textAlign: 'left' }}>
           Already have an account?
           <Link to="/login" className="auth-footer-action">
             Login
           </Link>
         </div>
       </div>
-    </div>
+    </SplitAuthLayout>
   );
 }

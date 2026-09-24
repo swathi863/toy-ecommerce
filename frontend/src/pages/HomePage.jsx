@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import CategoryNavBar from '../components/CategoryNavBar';
 import ProductCard from '../components/ProductCard';
-import { getCategoriesApi, getProductsApi, getProductsByCategoryApi, addToCartApi } from '../services/apiService';
+import { getCategoriesApi, getProductsApi, getProductsByCategoryApi, addToCartApi, getWishlistApi, toggleWishlistApi } from '../services/apiService';
 import { useNavigate } from 'react-router-dom';
 
-export default function HomePage({ user, searchQuery, onCartUpdated, onShowToast }) {
+export default function HomePage({ user, searchQuery, onCartUpdated, onWishlistUpdated, onShowToast }) {
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [wishlistIds, setWishlistIds] = useState(new Set());
 
   // Fetch Categories
   useEffect(() => {
@@ -24,6 +25,25 @@ export default function HomePage({ user, searchQuery, onCartUpdated, onShowToast
     };
     fetchCategories();
   }, []);
+
+  // Fetch Wishlist IDs if user is logged in
+  const fetchWishlistIds = async () => {
+    if (!user) {
+      setWishlistIds(new Set());
+      return;
+    }
+    try {
+      const items = await getWishlistApi();
+      const ids = new Set((items || []).map(i => i.productId));
+      setWishlistIds(ids);
+    } catch (err) {
+      // Ignore unauthorized or fetch error quietly
+    }
+  };
+
+  useEffect(() => {
+    fetchWishlistIds();
+  }, [user]);
 
   // Fetch Products (All or Filtered by Category)
   useEffect(() => {
@@ -75,6 +95,41 @@ export default function HomePage({ user, searchQuery, onCartUpdated, onShowToast
     }
   };
 
+  const handleToggleWishlist = async (product) => {
+    if (!user) {
+      if (onShowToast) onShowToast('info', 'Login Required', 'Please log in to save items to your wishlist.');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const res = await toggleWishlistApi(product.productId);
+      setWishlistIds(prev => {
+        const updated = new Set(prev);
+        if (res.inWishlist) {
+          updated.add(product.productId);
+        } else {
+          updated.delete(product.productId);
+        }
+        return updated;
+      });
+
+      if (onShowToast) {
+        onShowToast(
+          res.inWishlist ? 'success' : 'info',
+          res.inWishlist ? 'Added to Wishlist' : 'Removed from Wishlist',
+          res.message || (res.inWishlist ? `${product.name} added to your wishlist.` : `${product.name} removed from your wishlist.`)
+        );
+      }
+
+      if (onWishlistUpdated) onWishlistUpdated();
+    } catch (err) {
+      if (onShowToast) {
+        onShowToast('error', 'Wishlist Error', err.message || 'Failed to update wishlist');
+      }
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       {/* Category Navigation Bar */}
@@ -117,6 +172,8 @@ export default function HomePage({ user, searchQuery, onCartUpdated, onShowToast
                 key={product.productId}
                 product={product}
                 onAddToCart={handleAddToCart}
+                onToggleWishlist={handleToggleWishlist}
+                isInWishlist={wishlistIds.has(product.productId)}
               />
             ))}
           </div>

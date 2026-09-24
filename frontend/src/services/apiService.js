@@ -326,6 +326,81 @@ export const getOrderByIdApi = async (orderId) => {
   return data;
 };
 
+export const requestReturnItemApi = async (orderId, orderItemId) => {
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}/items/${orderItemId}/return`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to request return');
+  }
+  return data;
+};
+
+/* Wishlist APIs (Protected) */
+
+export const getWishlistApi = async () => {
+  const response = await fetch(`${API_BASE_URL}/wishlist`, {
+    headers: getAuthHeaders()
+  });
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+    throw new Error('Failed to fetch wishlist');
+  }
+  return await response.json();
+};
+
+export const toggleWishlistApi = async (productId) => {
+  const response = await fetch(`${API_BASE_URL}/wishlist/toggle/${productId}`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to update wishlist');
+  }
+  return data;
+};
+
+export const addToWishlistApi = async (productId) => {
+  const response = await fetch(`${API_BASE_URL}/wishlist/add/${productId}`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to add item to wishlist');
+  }
+  return data;
+};
+
+export const removeFromWishlistApi = async (productId) => {
+  const response = await fetch(`${API_BASE_URL}/wishlist/remove/${productId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to remove item from wishlist');
+  }
+  return data;
+};
+
+export const checkWishlistStatusApi = async (productId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/wishlist/check/${productId}`, {
+      headers: getAuthHeaders()
+    });
+    const data = await response.json();
+    return data.inWishlist || false;
+  } catch (err) {
+    return false;
+  }
+};
+
 
 /* Payment APIs (Protected) */
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, ArrowLeft, Send } from 'lucide-react';
 import { forgotPasswordApi } from '../services/apiService';
+import SplitAuthLayout from '../components/SplitAuthLayout';
 
 export default function ForgotPasswordPage({ onShowToast }) {
   const [email, setEmail] = useState('');
@@ -46,15 +47,20 @@ export default function ForgotPasswordPage({ onShowToast }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="auth-card-full">
-        <div className="auth-brand-logo">
+    <SplitAuthLayout
+      title="Secure Account Recovery"
+      subtitle="Enter your email to receive a instant password reset link and regain access to Toyland!"
+      imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
+      badgeEmoji="🔑"
+    >
+      <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
+        <div className="auth-brand-logo" style={{ justifyContent: 'flex-start' }}>
           <span className="toy-accent-icon">🔑</span>
           <span>Toyland</span>
         </div>
 
-        <h1 className="auth-heading">Forgot Password</h1>
-        <p className="auth-subtext">
+        <h1 className="auth-heading" style={{ textAlign: 'left' }}>Forgot Password</h1>
+        <p className="auth-subtext" style={{ textAlign: 'left' }}>
           Enter your registered email address to receive a password reset link.
         </p>
 
@@ -96,7 +102,7 @@ export default function ForgotPasswordPage({ onShowToast }) {
             </button>
           </form>
         ) : (
-          <div style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+          <div style={{ textAlign: 'left', margin: '1.5rem 0' }}>
             <div
               style={{
                 width: 52,
@@ -107,7 +113,7 @@ export default function ForgotPasswordPage({ onShowToast }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 1rem'
+                margin: '0 0 1rem'
               }}
             >
               <CheckCircle2 size={30} />
@@ -121,17 +127,17 @@ export default function ForgotPasswordPage({ onShowToast }) {
           </div>
         )}
 
-        <div className="auth-footer-text">
+        <div className="auth-footer-text" style={{ textAlign: 'left' }}>
           <Link
             to="/login"
             className="auth-footer-action"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', marginLeft: 0 }}
           >
             <ArrowLeft size={16} />
             <span>Back to Login</span>
           </Link>
         </div>
       </div>
-    </div>
+    </SplitAuthLayout>
   );
 }

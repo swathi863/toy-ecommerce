@@ -1,6 +1,7 @@
 package com.toyland.ecommerce.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class OrderItemResponseDto {
     private Long orderItemsId;
@@ -10,11 +11,18 @@ public class OrderItemResponseDto {
     private BigDecimal pricePerUnit;
     private BigDecimal totalPrice;
     private String imageUrl;
+    private String returnStatus;
+    private boolean returnEligible;
+    private LocalDateTime returnRequestedAt;
 
     public OrderItemResponseDto() {
     }
 
     public OrderItemResponseDto(Long orderItemsId, Long productId, String productName, Integer quantity, BigDecimal pricePerUnit, BigDecimal totalPrice, String imageUrl) {
+        this(orderItemsId, productId, productName, quantity, pricePerUnit, totalPrice, imageUrl, "NONE", false, null);
+    }
+
+    public OrderItemResponseDto(Long orderItemsId, Long productId, String productName, Integer quantity, BigDecimal pricePerUnit, BigDecimal totalPrice, String imageUrl, String returnStatus, boolean returnEligible, LocalDateTime returnRequestedAt) {
         this.orderItemsId = orderItemsId;
         this.productId = productId;
         this.productName = productName;
@@ -22,6 +30,9 @@ public class OrderItemResponseDto {
         this.pricePerUnit = pricePerUnit;
         this.totalPrice = totalPrice;
         this.imageUrl = imageUrl;
+        this.returnStatus = returnStatus != null ? returnStatus : "NONE";
+        this.returnEligible = returnEligible;
+        this.returnRequestedAt = returnRequestedAt;
     }
 
     public Long getOrderItemsId() {
@@ -78,5 +89,29 @@ public class OrderItemResponseDto {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getReturnStatus() {
+        return returnStatus;
+    }
+
+    public void setReturnStatus(String returnStatus) {
+        this.returnStatus = returnStatus;
+    }
+
+    public boolean isReturnEligible() {
+        return returnEligible;
+    }
+
+    public void setReturnEligible(boolean returnEligible) {
+        this.returnEligible = returnEligible;
+    }
+
+    public LocalDateTime getReturnRequestedAt() {
+        return returnRequestedAt;
+    }
+
+    public void setReturnRequestedAt(LocalDateTime returnRequestedAt) {
+        this.returnRequestedAt = returnRequestedAt;
     }
 }

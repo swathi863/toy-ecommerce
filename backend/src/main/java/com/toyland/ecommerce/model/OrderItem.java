@@ -3,6 +3,8 @@ package com.toyland.ecommerce.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "order_items")
 public class OrderItem {
@@ -28,6 +30,12 @@ public class OrderItem {
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
+
+    @Column(name = "return_status")
+    private String returnStatus = "NONE";
+
+    @Column(name = "return_requested_at")
+    private LocalDateTime returnRequestedAt;
 
     public OrderItem() {
     }
@@ -86,5 +94,21 @@ public class OrderItem {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public String getReturnStatus() {
+        return returnStatus != null ? returnStatus : "NONE";
+    }
+
+    public void setReturnStatus(String returnStatus) {
+        this.returnStatus = returnStatus;
+    }
+
+    public LocalDateTime getReturnRequestedAt() {
+        return returnRequestedAt;
+    }
+
+    public void setReturnRequestedAt(LocalDateTime returnRequestedAt) {
+        this.returnRequestedAt = returnRequestedAt;
     }
 }

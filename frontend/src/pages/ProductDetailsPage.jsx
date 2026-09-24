@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getProductByIdApi, addToCartApi } from '../services/apiService';
-import { ShoppingBag, ArrowLeft, Star, ShieldCheck, Truck, Check } from 'lucide-react';
+import { getProductByIdApi, addToCartApi, checkWishlistStatusApi, toggleWishlistApi } from '../services/apiService';
+import { ShoppingBag, ArrowLeft, Star, Heart } from 'lucide-react';
 
-export default function ProductDetailsPage({ user, onCartUpdated, onShowToast }) {
+export default function ProductDetailsPage({ user, onCartUpdated, onWishlistUpdated, onShowToast }) {
   const { productId } = useParams();
   const navigate = useNavigate();
 
@@ -12,6 +12,8 @@ export default function ProductDetailsPage({ user, onCartUpdated, onShowToast })
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
+  const [inWishlist, setInWishlist] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -22,6 +24,11 @@ export default function ProductDetailsPage({ user, onCartUpdated, onShowToast })
         if (data.imageUrl) {
           setSelectedImage(data.imageUrl);
         }
+
+        if (user) {
+          const wishStatus = await checkWishlistStatusApi(productId);
+          setInWishlist(wishStatus);
+        }
       } catch (err) {
         if (onShowToast) {
           onShowToast('error', 'Error', 'Failed to load product details');
@@ -31,7 +38,7 @@ export default function ProductDetailsPage({ user, onCartUpdated, onShowToast })
       }
     };
     fetchProductDetails();
-  }, [productId]);
+  }, [productId, user]);
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -53,6 +60,34 @@ export default function ProductDetailsPage({ user, onCartUpdated, onShowToast })
       }
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!user) {
+      if (onShowToast) onShowToast('info', 'Login Required', 'Please login to manage your wishlist.');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setTogglingWishlist(true);
+      const res = await toggleWishlistApi(product.productId);
+      setInWishlist(res.inWishlist);
+      if (onShowToast) {
+        onShowToast(
+          res.inWishlist ? 'success' : 'info',
+          res.inWishlist ? 'Added to Wishlist' : 'Removed from Wishlist',
+          res.message || (res.inWishlist ? 'Added to Wishlist' : 'Removed from Wishlist')
+        );
+      }
+      if (onWishlistUpdated) onWishlistUpdated();
+    } catch (err) {
+      if (onShowToast) {
+        onShowToast('error', 'Wishlist Error', err.message || 'Failed to update wishlist');
+      }
+    } finally {
+      setTogglingWishlist(false);
     }
   };
 
@@ -110,7 +145,7 @@ export default function ProductDetailsPage({ user, onCartUpdated, onShowToast })
                     borderRadius: 8,
                     objectFit: 'cover',
                     cursor: 'pointer',
-                    border: selectedImage === img ? '2px solid var(--primary)' : '1px solid var(--border)'
+                    border: selectedImage === img ? '2px solid var(--primary-navy)' : '1px solid var(--border-gray)'
                   }}
                 />
               ))}
@@ -128,7 +163,7 @@ export default function ProductDetailsPage({ user, onCartUpdated, onShowToast })
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span className="rating-stars" style={{ fontSize: '1rem' }}>
-              <Star size={18} fill="var(--accent-amber)" /> 4.8 / 5.0 Rating
+              <Star size={18} fill="#F59E0B" color="#F59E0B" /> 4.8 / 5.0 Rating
             </span>
             <span className="stock-tag">
               {product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
@@ -161,16 +196,45 @@ export default function ProductDetailsPage({ user, onCartUpdated, onShowToast })
             </div>
           </div>
 
-          {/* Add to Cart CTA */}
-          <button
-            onClick={handleAddToCart}
-            className="btn-submit-primary"
-            style={{ marginTop: '1.5rem' }}
-            disabled={adding || product.stock <= 0}
-          >
-            <ShoppingBag size={20} />
-            <span>{adding ? 'Adding to Cart...' : 'Add to Cart'}</span>
-          </button>
+          {/* Action CTAs */}
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={handleAddToCart}
+              className="btn-submit-primary"
+              style={{ flex: 1, minWidth: 160 }}
+              disabled={adding || product.stock <= 0}
+            >
+              <ShoppingBag size={20} />
+              <span>{adding ? 'Adding to Cart...' : 'Add to Cart'}</span>
+            </button>
+
+            <button
+              onClick={handleToggleWishlist}
+              disabled={togglingWishlist}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.25rem',
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                border: inWishlist ? '2px solid #EC4899' : '1px solid var(--border-gray)',
+                background: inWishlist ? '#FCE7F3' : '#FFFFFF',
+                color: inWishlist ? '#DB2777' : 'var(--text-navy)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Heart
+                size={20}
+                color={inWishlist ? "#DB2777" : "#64748B"}
+                fill={inWishlist ? "#DB2777" : "none"}
+              />
+              <span>{inWishlist ? 'In Wishlist' : 'Add to Wishlist'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, LogOut, User as UserIcon, Package } from 'lucide-react';
+import { Search, ShoppingBag, LogOut, User as UserIcon, Package, Heart } from 'lucide-react';
 
-export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) {
+export default function SiteHeader({ user, cartItemCount, wishlistCount, onSearch, onLogout }) {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
@@ -51,6 +51,16 @@ export default function SiteHeader({ user, cartItemCount, onSearch, onLogout }) 
 
         {/* Right: Actions */}
         <div className="header-actions">
+          {/* Wishlist Icon */}
+          <Link to="/wishlist" className="header-icon-link" title="My Wishlist">
+            <Heart size={22} />
+            {wishlistCount > 0 && (
+              <span className="cart-badge-count" style={{ background: '#EC4899' }}>
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
+
           {/* Cart Icon */}
           <Link to="/cart" className="header-icon-link" title="View Shopping Cart">
             <ShoppingBag size={22} />

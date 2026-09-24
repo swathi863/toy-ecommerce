@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { loginUserApi } from '../services/apiService';
+import SplitAuthLayout from '../components/SplitAuthLayout';
 
 export default function LoginPage({ onShowToast, onLoginSuccess }) {
   const navigate = useNavigate();
@@ -81,7 +82,6 @@ export default function LoginPage({ onShowToast, onLoginSuccess }) {
       navigate('/home');
     } catch (err) {
       setIsSubmitting(false);
-      // Clean user-friendly message, no backend/database/JWT details exposed
       const friendlyMsg = err.message || 'Invalid email or password. Please try again.';
       setApiError(friendlyMsg);
 
@@ -89,23 +89,27 @@ export default function LoginPage({ onShowToast, onLoginSuccess }) {
         onShowToast('error', 'Login Failed', friendlyMsg);
       }
 
-      // User remains on /login page
       navigate('/login');
     }
   };
 
   return (
-    <div className="page-container">
-      <div className="auth-card-full">
+    <SplitAuthLayout
+      title="Welcome to Toyland"
+      subtitle="Login to explore soft teddy bears, action figures, and magical toy collections!"
+      imageSrc="https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg"
+      badgeEmoji="🧸"
+    >
+      <div className="auth-card-full" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
         {/* Brand Header */}
-        <div className="auth-brand-logo">
+        <div className="auth-brand-logo" style={{ justifyContent: 'flex-start' }}>
           <span className="toy-accent-icon">🧸</span>
           <span>Toyland</span>
         </div>
 
         {/* Page Heading */}
-        <h1 className="auth-heading">Welcome Back!</h1>
-        <p className="auth-subtext">Login to discover amazing toys on Toyland.</p>
+        <h1 className="auth-heading" style={{ textAlign: 'left' }}>Welcome Back!</h1>
+        <p className="auth-subtext" style={{ textAlign: 'left' }}>Login to discover amazing toys on Toyland.</p>
 
         {/* Success Banner when redirected from Registration */}
         {successMessage && !apiError && (
@@ -227,13 +231,13 @@ export default function LoginPage({ onShowToast, onLoginSuccess }) {
         </form>
 
         {/* Route to Register */}
-        <div className="auth-footer-text">
+        <div className="auth-footer-text" style={{ textAlign: 'left' }}>
           Don't have an account?
           <Link to="/register" className="auth-footer-action">
             Register
           </Link>
         </div>
       </div>
-    </div>
+    </SplitAuthLayout>
   );
 }

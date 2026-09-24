@@ -13,6 +13,7 @@ import HomePage from './pages/HomePage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
+import WishlistPage from './pages/WishlistPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -22,6 +23,7 @@ import Toast from './components/Toast';
 import {
   getCurrentUserApi,
   getCartApi,
+  getWishlistApi,
   logoutUserApi
 } from './services/apiService';
 
@@ -41,6 +43,7 @@ function AppContent() {
   const [toasts, setToasts] = useState([]);
   const [user, setUser] = useState(null);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
   const showToast = (type, title, message) => {
@@ -101,14 +104,33 @@ function AppContent() {
     }
   };
 
+  // Fetch wishlist count
+  const fetchWishlistCount = async () => {
+    const token = localStorage.getItem('toyland_jwt_token');
+
+    if (!token) {
+      setWishlistCount(0);
+      return;
+    }
+
+    try {
+      const wishlist = await getWishlistApi();
+      setWishlistCount((wishlist || []).length);
+    } catch (err) {
+      setWishlistCount(0);
+    }
+  };
+
   useEffect(() => {
     fetchUserSession();
     fetchCartCount();
+    fetchWishlistCount();
   }, []);
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     fetchCartCount();
+    fetchWishlistCount();
   };
 
   const handleLogout = async () => {
@@ -116,6 +138,7 @@ function AppContent() {
 
     setUser(null);
     setCartItemCount(0);
+    setWishlistCount(0);
 
     showToast(
       'info',
@@ -132,13 +155,6 @@ function AppContent() {
     }
   };
 
-  /*
-   * Public authentication pages.
-   *
-   * These pages do NOT require the user to be logged in.
-   * Reset Password is intentionally included here so it behaves
-   * exactly like Login, Register, and Forgot Password.
-   */
   const isAuthPage = [
     '/login',
     '/register',
@@ -163,6 +179,7 @@ function AppContent() {
         <SiteHeader
           user={user}
           cartItemCount={cartItemCount}
+          wishlistCount={wishlistCount}
           onSearch={handleSearch}
           onLogout={handleLogout}
         />
@@ -193,6 +210,7 @@ function AppContent() {
                 user={user}
                 searchQuery={searchQuery}
                 onCartUpdated={fetchCartCount}
+                onWishlistUpdated={fetchWishlistCount}
                 onShowToast={showToast}
               />
             }
@@ -206,6 +224,7 @@ function AppContent() {
                 user={user}
                 searchQuery={searchQuery}
                 onCartUpdated={fetchCartCount}
+                onWishlistUpdated={fetchWishlistCount}
                 onShowToast={showToast}
               />
             }
@@ -218,6 +237,7 @@ function AppContent() {
               <ProductDetailsPage
                 user={user}
                 onCartUpdated={fetchCartCount}
+                onWishlistUpdated={fetchWishlistCount}
                 onShowToast={showToast}
               />
             }
@@ -230,6 +250,19 @@ function AppContent() {
               <CartPage
                 user={user}
                 onCartUpdated={fetchCartCount}
+                onShowToast={showToast}
+              />
+            }
+          />
+
+          {/* Wishlist */}
+          <Route
+            path="/wishlist"
+            element={
+              <WishlistPage
+                user={user}
+                onCartUpdated={fetchCartCount}
+                onWishlistUpdated={fetchWishlistCount}
                 onShowToast={showToast}
               />
             }
@@ -279,13 +312,7 @@ function AppContent() {
             }
           />
 
-          {/* Reset Password
-              Public page.
-              User does NOT need to be logged in.
-              User does NOT need a Vercel account.
-              Token is provided through:
-              /reset-password?token=TOKEN
-          */}
+          {/* Reset Password */}
           <Route
             path="/reset-password"
             element={
