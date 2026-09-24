@@ -1,31 +1,19 @@
 import React from 'react';
+import toylandAuthBanner from '../assets/toyland-auth-banner.png';
 
-export default function SplitAuthLayout({ children, title, subtitle, imageSrc, badgeEmoji = "🧸" }) {
-  const defaultImage = "https://ik.imagekit.io/StringStackSwathi/SoftToys/SoftToys/Teddy%20Bear.jpg";
-
+export default function SplitAuthLayout({ children, imageSrc }) {
   return (
     <div className="auth-split-wrapper">
-      {/* LEFT SECTION: Toy Image & Visual Illustration (50%) */}
+      {/* LEFT SIDE (50%): Uploaded Toyland Image */}
       <div className="auth-split-left-image-side">
-        <div className="auth-split-image-container">
-          <img
-            src={imageSrc || defaultImage}
-            alt="Toyland Visual"
-            className="auth-split-main-img"
-          />
-          <div className="auth-split-overlay-card">
-            <div className="auth-split-overlay-badge">{badgeEmoji}</div>
-            <div>
-              <div className="auth-split-overlay-title">{title || "Discover Toyland"}</div>
-              <div className="auth-split-overlay-desc">
-                {subtitle || "Small Toys • Big Smiles. Premium toys & soft plushies for every child!"}
-              </div>
-            </div>
-          </div>
-        </div>
+        <img
+          src={imageSrc || toylandAuthBanner}
+          alt="Toyland - Small Toys Big Smiles"
+          className="auth-split-main-img"
+        />
       </div>
 
-      {/* RIGHT SECTION: Existing Auth Form Content (50%) */}
+      {/* RIGHT SIDE (50%): Existing Auth Form Content */}
       <div className="auth-split-right-form-side">
         <div className="auth-split-form-inner">
           {children}
