@@ -12,6 +12,7 @@ import SiteHeader from './components/SiteHeader';
 import HomePage from './pages/HomePage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import WishlistPage from './pages/WishlistPage';
 import LoginPage from './pages/LoginPage';
@@ -248,6 +249,18 @@ function AppContent() {
             path="/cart"
             element={
               <CartPage
+                user={user}
+                onCartUpdated={fetchCartCount}
+                onShowToast={showToast}
+              />
+            }
+          />
+
+          {/* Checkout Page */}
+          <Route
+            path="/checkout"
+            element={
+              <CheckoutPage
                 user={user}
                 onCartUpdated={fetchCartCount}
                 onShowToast={showToast}
