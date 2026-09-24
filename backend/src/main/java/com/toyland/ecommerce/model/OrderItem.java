@@ -37,6 +37,9 @@ public class OrderItem {
     @Column(name = "return_requested_at")
     private LocalDateTime returnRequestedAt;
 
+    @Column(name = "delivery_date")
+    private LocalDateTime deliveryDate;
+
     public OrderItem() {
     }
 
@@ -110,5 +113,13 @@ public class OrderItem {
 
     public void setReturnRequestedAt(LocalDateTime returnRequestedAt) {
         this.returnRequestedAt = returnRequestedAt;
+    }
+
+    public LocalDateTime getDeliveryDate() {
+        return deliveryDate;
+    }
+
+    public void setDeliveryDate(LocalDateTime deliveryDate) {
+        this.deliveryDate = deliveryDate;
     }
 }

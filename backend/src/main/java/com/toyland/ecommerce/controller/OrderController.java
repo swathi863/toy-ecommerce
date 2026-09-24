@@ -50,11 +50,25 @@ public class OrderController {
                 .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
     }
 
-    private boolean isWithinReturnPeriod(Order order) {
-        if (order == null || order.getCreatedAt() == null) {
+    /**
+     * Calculates 10-day return eligibility based on ACTUAL delivery date (delivery_date).
+     */
+    private boolean isWithinReturnPeriod(OrderItem item, Order order) {
+        if (item == null) {
             return false;
         }
-        long daysBetween = ChronoUnit.DAYS.between(order.getCreatedAt(), LocalDateTime.now());
+
+        // If delivery_date is missing, initialize it from order creation/delivery date
+        if (item.getDeliveryDate() == null && order != null && order.getCreatedAt() != null) {
+            item.setDeliveryDate(order.getCreatedAt());
+            orderItemRepository.save(item);
+        }
+
+        if (item.getDeliveryDate() == null) {
+            return false;
+        }
+
+        long daysBetween = ChronoUnit.DAYS.between(item.getDeliveryDate(), LocalDateTime.now());
         return daysBetween <= RETURN_PERIOD_DAYS;
     }
 
@@ -97,7 +111,6 @@ public class OrderController {
                 List<OrderItem> items = itemsByOrderId.getOrDefault(order.getOrderId(), Collections.emptyList());
                 BigDecimal subtotal = BigDecimal.ZERO;
                 List<OrderItemResponseDto> itemDtos = new ArrayList<>();
-                boolean orderEligibleForReturn = isWithinReturnPeriod(order);
 
                 for (OrderItem item : items) {
                     checkAndUpdateRefundStatus(item);
@@ -113,7 +126,7 @@ public class OrderController {
                     }
 
                     String currentReturnStatus = item.getReturnStatus();
-                    boolean itemEligible = orderEligibleForReturn && "NONE".equalsIgnoreCase(currentReturnStatus);
+                    boolean itemEligible = isWithinReturnPeriod(item, order) && "NONE".equalsIgnoreCase(currentReturnStatus);
 
                     OrderItemResponseDto itemDto = new OrderItemResponseDto(
                             item.getOrderItemsId(),
@@ -125,7 +138,8 @@ public class OrderController {
                             imageUrl,
                             currentReturnStatus,
                             itemEligible,
-                            item.getReturnRequestedAt()
+                            item.getReturnRequestedAt(),
+                            item.getDeliveryDate()
                     );
                     itemDtos.add(itemDto);
                 }
@@ -178,7 +192,6 @@ public class OrderController {
 
             BigDecimal subtotal = BigDecimal.ZERO;
             List<OrderItemResponseDto> itemDtos = new ArrayList<>();
-            boolean orderEligibleForReturn = isWithinReturnPeriod(order);
 
             for (OrderItem item : items) {
                 checkAndUpdateRefundStatus(item);
@@ -194,7 +207,7 @@ public class OrderController {
                 }
 
                 String currentReturnStatus = item.getReturnStatus();
-                boolean itemEligible = orderEligibleForReturn && "NONE".equalsIgnoreCase(currentReturnStatus);
+                boolean itemEligible = isWithinReturnPeriod(item, order) && "NONE".equalsIgnoreCase(currentReturnStatus);
 
                 OrderItemResponseDto itemDto = new OrderItemResponseDto(
                         item.getOrderItemsId(),
@@ -206,7 +219,8 @@ public class OrderController {
                         imageUrl,
                         currentReturnStatus,
                         itemEligible,
-                        item.getReturnRequestedAt()
+                        item.getReturnRequestedAt(),
+                        item.getDeliveryDate()
                 );
                 itemDtos.add(itemDto);
             }
@@ -249,11 +263,7 @@ public class OrderController {
                     .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
 
             if (!order.getUser().getUserId().equals(user.getUserId())) {
-                return ResponseEntity.status(403).body(new ApiResponse(false, "Access denied."));
-            }
-
-            if (!isWithinReturnPeriod(order)) {
-                return ResponseEntity.badRequest().body(new ApiResponse(false, "Return period has expired for this order. Returns are only allowed within 10 days."));
+                return ResponseEntity.status(403).body(new ApiResponse(false, "Access denied. You can only return items from your own orders."));
             }
 
             OrderItem item = orderItemRepository.findById(orderItemId)
@@ -261,6 +271,10 @@ public class OrderController {
 
             if (!item.getOrder().getOrderId().equals(order.getOrderId())) {
                 return ResponseEntity.badRequest().body(new ApiResponse(false, "Order item does not belong to this order."));
+            }
+
+            if (!isWithinReturnPeriod(item, order)) {
+                return ResponseEntity.badRequest().body(new ApiResponse(false, "Return period has expired. Returns are available only within 10 days of delivery."));
             }
 
             if (!"NONE".equalsIgnoreCase(item.getReturnStatus())) {
@@ -307,7 +321,8 @@ public class OrderController {
             BigDecimal grandTotal = subtotal.add(shippingFee);
 
             String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            Order order = new Order(orderId, user, grandTotal, OrderStatus.SUCCESS, LocalDateTime.now(), LocalDateTime.now());
+            LocalDateTime now = LocalDateTime.now();
+            Order order = new Order(orderId, user, grandTotal, OrderStatus.SUCCESS, now, now);
             Order savedOrder = orderRepository.save(order);
 
             for (CartItem item : cartItems) {
@@ -315,6 +330,7 @@ public class OrderController {
                 BigDecimal itemTotalPrice = pricePerUnit.multiply(BigDecimal.valueOf(item.getQuantity()));
 
                 OrderItem orderItem = new OrderItem(savedOrder, item.getProduct(), item.getQuantity(), pricePerUnit, itemTotalPrice);
+                orderItem.setDeliveryDate(now); // Set actual delivery timestamp on checkout delivery
                 orderItemRepository.save(orderItem);
             }
 

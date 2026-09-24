@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProductByIdApi, addToCartApi, checkWishlistStatusApi, toggleWishlistApi } from '../services/apiService';
-import { ShoppingBag, ArrowLeft, Star, Heart } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Star, Heart, RotateCcw, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 export default function ProductDetailsPage({ user, onCartUpdated, onWishlistUpdated, onShowToast }) {
   const { productId } = useParams();
@@ -155,9 +155,25 @@ export default function ProductDetailsPage({ user, onCartUpdated, onWishlistUpda
 
         {/* Product Details & Info */}
         <div className="details-content">
-          <span className="category-badge" style={{ position: 'static', width: 'fit-content' }}>
-            {product.categoryName}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <span className="category-badge" style={{ position: 'static', width: 'fit-content' }}>
+              {product.categoryName}
+            </span>
+            <span style={{
+              background: '#FEF3C7',
+              color: '#D97706',
+              padding: '0.25rem 0.65rem',
+              borderRadius: '20px',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.3rem'
+            }}>
+              <RotateCcw size={13} />
+              10-Day Easy Returns
+            </span>
+          </div>
 
           <h1 className="details-title">{product.name}</h1>
 
@@ -235,6 +251,66 @@ export default function ProductDetailsPage({ user, onCartUpdated, onWishlistUpda
               <span>{inWishlist ? 'In Wishlist' : 'Add to Wishlist'}</span>
             </button>
           </div>
+
+          {/* Dedicated Return Policy Section */}
+          <div style={{
+            marginTop: '2rem',
+            background: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: '12px',
+            padding: '1.25rem',
+            boxShadow: '0 2px 8px rgba(36, 59, 107, 0.04)'
+          }}>
+            <h3 style={{
+              margin: '0 0 0.75rem 0',
+              fontSize: '1rem',
+              fontWeight: 800,
+              color: 'var(--primary-navy)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <ShieldCheck size={18} color="#D97706" />
+              Return Policy
+            </h3>
+
+            {/* Checklist */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.86rem', color: '#334155', fontWeight: 600 }}>
+                <span style={{ color: '#059669' }}>✓</span> Eligible for return within 10 days of delivery
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.86rem', color: '#334155', fontWeight: 600 }}>
+                <span style={{ color: '#059669' }}>✓</span> Return request must be submitted within the return period
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.86rem', color: '#334155', fontWeight: 600 }}>
+                <span style={{ color: '#059669' }}>✓</span> Refund will be processed after the return request
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.86rem', color: '#334155', fontWeight: 600 }}>
+                <span style={{ color: '#059669' }}>✓</span> Refund completion may take 1–2 days
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.86rem', color: '#334155', fontWeight: 600 }}>
+                <span style={{ color: '#059669' }}>✓</span> Return eligibility is calculated from the delivery date
+              </div>
+            </div>
+
+            {/* Detailed Policy Text */}
+            <div style={{ borderTop: '1px dashed #CBD5E1', paddingTop: '0.75rem' }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--primary-navy)', marginBottom: '0.3rem' }}>
+                10-Day Easy Returns
+              </div>
+              <p style={{ fontSize: '0.82rem', color: '#64748B', lineHeight: 1.4, margin: '0 0 0.5rem 0' }}>
+                You can return this product within 10 days from the date it is delivered.
+              </p>
+              <ul style={{ fontSize: '0.82rem', color: '#64748B', lineHeight: 1.5, paddingLeft: '1.2rem', margin: 0 }}>
+                <li>Return requests must be submitted within 10 days of delivery.</li>
+                <li>The return period starts from the actual delivery date.</li>
+                <li>Once a return is requested, the refund will be processed within 1–2 days.</li>
+                <li>Return availability is shown on your Orders page.</li>
+                <li>Returns are not available after the 10-day return period.</li>
+              </ul>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

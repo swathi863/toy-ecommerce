@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMyOrdersApi, requestReturnItemApi } from '../services/apiService';
-import { ArrowLeft, Package, CheckCircle2, Clock, XCircle, Truck, RotateCcw, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle2, Clock, XCircle, Truck, RotateCcw, AlertTriangle, ShieldCheck, Calendar } from 'lucide-react';
 
 export default function OrdersPage({ user, onShowToast }) {
   const navigate = useNavigate();
@@ -87,7 +87,6 @@ export default function OrdersPage({ user, onShowToast }) {
         );
       }
 
-      // Close modal & refresh orders list
       handleCloseReturnModal();
       await fetchOrders();
     } catch (err) {
@@ -121,18 +120,31 @@ export default function OrdersPage({ user, onShowToast }) {
   }
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return 'Recent Order';
+    if (!dateStr) return 'N/A';
     try {
       const d = new Date(dateStr);
       return d.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       });
     } catch {
       return dateStr;
+    }
+  };
+
+  const calculateReturnDeadline = (deliveryDateStr) => {
+    if (!deliveryDateStr) return 'N/A';
+    try {
+      const d = new Date(deliveryDateStr);
+      d.setDate(d.getDate() + 10);
+      return d.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return 'N/A';
     }
   };
 
@@ -185,14 +197,15 @@ export default function OrdersPage({ user, onShowToast }) {
           gap: '0.3rem'
         }}>
           <Truck size={14} />
-          Status: {status === 'SUCCESS' ? 'Delivered' : (status || 'Delivered')}
+          Status: Delivered
         </span>
       </div>
     );
   };
 
-  const renderReturnStatusBadge = (order, item) => {
+  const renderReturnStatusSection = (order, item) => {
     const status = item.returnStatus || 'NONE';
+    const deliveryDate = item.deliveryDate || order.createdAt;
 
     if (status === 'RETURN_REQUESTED') {
       return (
@@ -242,47 +255,52 @@ export default function OrdersPage({ user, onShowToast }) {
       );
     }
 
-    // Check 10-day return period eligibility
+    // Check 10-day return period eligibility based on delivery date
     const isEligible = item.returnEligible;
 
-    if (isEligible) {
-      return (
-        <button
-          onClick={() => handleOpenReturnModal(order.orderId, item)}
-          style={{
-            backgroundColor: '#FFF',
-            color: '#D97706',
-            border: '1px solid #FCD34D',
-            padding: '0.4rem 0.85rem',
-            borderRadius: '6px',
-            fontSize: '0.85rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            transition: 'all 0.2s ease'
-          }}
-          title="Return this item within 10 days"
-        >
-          <RotateCcw size={14} />
-          Return
-        </button>
-      );
-    }
-
     return (
-      <span style={{
-        fontSize: '0.78rem',
-        color: '#94A3B8',
-        fontStyle: 'italic',
-        background: '#F8FAFC',
-        padding: '0.3rem 0.6rem',
-        borderRadius: '4px',
-        border: '1px solid #E2E8F0'
-      }}>
-        Return period expired
-      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+        <div style={{ fontSize: '0.78rem', color: '#475569', textAlign: 'right' }}>
+          <div>Delivered on: <strong>{formatDate(deliveryDate)}</strong></div>
+          <div>Return available until: <strong>{calculateReturnDeadline(deliveryDate)}</strong></div>
+        </div>
+
+        {isEligible ? (
+          <button
+            onClick={() => handleOpenReturnModal(order.orderId, item)}
+            style={{
+              backgroundColor: '#FFF',
+              color: '#D97706',
+              border: '1px solid #FCD34D',
+              padding: '0.4rem 0.85rem',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              transition: 'all 0.2s ease'
+            }}
+            title="Return this product within 10 days of delivery"
+          >
+            <RotateCcw size={14} />
+            Return
+          </button>
+        ) : (
+          <span style={{
+            fontSize: '0.78rem',
+            color: '#94A3B8',
+            fontStyle: 'italic',
+            background: '#F8FAFC',
+            padding: '0.3rem 0.6rem',
+            borderRadius: '4px',
+            border: '1px solid #E2E8F0'
+          }}>
+            Return period expired
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -400,9 +418,9 @@ export default function OrdersPage({ user, onShowToast }) {
                             </div>
                           </div>
 
-                          {/* Return Button / Status Badge */}
+                          {/* Return Section (Delivery Date info & Return Button / Badge) */}
                           <div>
-                            {renderReturnStatusBadge(order, item)}
+                            {renderReturnStatusSection(order, item)}
                           </div>
                         </div>
                       );

@@ -5,15 +5,8 @@ export default function SplitAuthLayout({ children, title, subtitle, imageSrc, b
 
   return (
     <div className="auth-split-wrapper">
-      {/* Left Section: Auth Form */}
-      <div className="auth-split-left">
-        <div className="auth-split-left-inner">
-          {children}
-        </div>
-      </div>
-
-      {/* Right Section: Toy Visual Illustration */}
-      <div className="auth-split-right">
+      {/* LEFT SECTION: Toy Image & Visual Illustration (50%) */}
+      <div className="auth-split-left-image-side">
         <div className="auth-split-image-container">
           <img
             src={imageSrc || defaultImage}
@@ -25,10 +18,17 @@ export default function SplitAuthLayout({ children, title, subtitle, imageSrc, b
             <div>
               <div className="auth-split-overlay-title">{title || "Discover Toyland"}</div>
               <div className="auth-split-overlay-desc">
-                {subtitle || "Premium toys, soft teddy bears & action figures for every child's imagination."}
+                {subtitle || "Small Toys • Big Smiles. Premium toys & soft plushies for every child!"}
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* RIGHT SECTION: Existing Auth Form Content (50%) */}
+      <div className="auth-split-right-form-side">
+        <div className="auth-split-form-inner">
+          {children}
         </div>
       </div>
     </div>

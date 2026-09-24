@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Star, Heart } from 'lucide-react';
+import { ShoppingBag, Star, Heart, RotateCcw } from 'lucide-react';
 
 export default function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishlist }) {
   const formattedPrice = new Intl.NumberFormat('en-IN', {
@@ -75,7 +75,13 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
           </span>
         </div>
 
-        <div className="price-text">{formattedPrice}</div>
+        {/* 10-Day Easy Returns Badge */}
+        <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', color: '#D97706', fontWeight: 600 }}>
+          <RotateCcw size={13} />
+          <span>10-Day Easy Returns</span>
+        </div>
+
+        <div className="price-text" style={{ marginTop: '0.3rem' }}>{formattedPrice}</div>
       </div>
 
       {/* Card Actions */}

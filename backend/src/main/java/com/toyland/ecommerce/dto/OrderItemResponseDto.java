@@ -14,15 +14,16 @@ public class OrderItemResponseDto {
     private String returnStatus;
     private boolean returnEligible;
     private LocalDateTime returnRequestedAt;
+    private LocalDateTime deliveryDate;
 
     public OrderItemResponseDto() {
     }
 
     public OrderItemResponseDto(Long orderItemsId, Long productId, String productName, Integer quantity, BigDecimal pricePerUnit, BigDecimal totalPrice, String imageUrl) {
-        this(orderItemsId, productId, productName, quantity, pricePerUnit, totalPrice, imageUrl, "NONE", false, null);
+        this(orderItemsId, productId, productName, quantity, pricePerUnit, totalPrice, imageUrl, "NONE", false, null, null);
     }
 
-    public OrderItemResponseDto(Long orderItemsId, Long productId, String productName, Integer quantity, BigDecimal pricePerUnit, BigDecimal totalPrice, String imageUrl, String returnStatus, boolean returnEligible, LocalDateTime returnRequestedAt) {
+    public OrderItemResponseDto(Long orderItemsId, Long productId, String productName, Integer quantity, BigDecimal pricePerUnit, BigDecimal totalPrice, String imageUrl, String returnStatus, boolean returnEligible, LocalDateTime returnRequestedAt, LocalDateTime deliveryDate) {
         this.orderItemsId = orderItemsId;
         this.productId = productId;
         this.productName = productName;
@@ -33,6 +34,7 @@ public class OrderItemResponseDto {
         this.returnStatus = returnStatus != null ? returnStatus : "NONE";
         this.returnEligible = returnEligible;
         this.returnRequestedAt = returnRequestedAt;
+        this.deliveryDate = deliveryDate;
     }
 
     public Long getOrderItemsId() {
@@ -113,5 +115,13 @@ public class OrderItemResponseDto {
 
     public void setReturnRequestedAt(LocalDateTime returnRequestedAt) {
         this.returnRequestedAt = returnRequestedAt;
+    }
+
+    public LocalDateTime getDeliveryDate() {
+        return deliveryDate;
+    }
+
+    public void setDeliveryDate(LocalDateTime deliveryDate) {
+        this.deliveryDate = deliveryDate;
     }
 }
