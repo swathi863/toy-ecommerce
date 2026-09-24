@@ -24,11 +24,11 @@ export default function SplitAuthLayout({ children }) {
       <main className="auth-card-wrapper">
         <div className="auth-split-card">
           {/* LEFT SIDE (50%): Complete Toyland Image */}
-          <div className="auth-card-left-image">
+          <div className="auth-card-left-image auth-image-section">
             <img
               src="https://ik.imagekit.io/StringStackSwathi/Educational/Educational/main.png"
               alt="Toyland - Small Toys Big Smiles"
-              className="auth-card-img"
+              className="auth-card-img auth-toy-image"
             />
           </div>
 
