@@ -888,6 +888,7 @@ body {
   overflow: hidden;
 }
 
+.auth-image-section,
 .auth-split-left-image-side {
   flex: 1;
   width: 50%;
@@ -902,10 +903,11 @@ body {
   padding: 0;
 }
 
+.auth-toy-image,
 .auth-split-main-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
 }
@@ -988,6 +990,7 @@ body {
     flex-direction: column;
   }
 
+  .auth-image-section,
   .auth-split-left-image-side {
     width: 100%;
     height: 240px;
@@ -1004,6 +1007,7 @@ body {
     overflow-y: visible;
   }
 
+  .auth-toy-image,
   .auth-split-main-img {
     height: 100%;
     min-height: 240px;
@@ -1011,12 +1015,14 @@ body {
 }
 
 @media (max-width: 640px) {
+  .auth-image-section,
   .auth-split-left-image-side {
     height: 180px;
     min-height: 180px;
     max-height: 180px;
   }
 
+  .auth-toy-image,
   .auth-split-main-img {
     min-height: 180px;
   }
