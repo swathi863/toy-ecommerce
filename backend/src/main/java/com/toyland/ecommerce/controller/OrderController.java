@@ -154,7 +154,7 @@ public class OrderController {
                     paymentStatus = "Pending";
                 }
 
-                return new OrderResponseDto(
+                OrderResponseDto dto = new OrderResponseDto(
                         order.getOrderId(),
                         totalAmount,
                         subtotal,
@@ -164,6 +164,14 @@ public class OrderController {
                         order.getCreatedAt(),
                         itemDtos
                 );
+                dto.setFullName(order.getFullName());
+                dto.setPhoneNumber(order.getPhoneNumber());
+                dto.setAddressLine1(order.getAddressLine1());
+                dto.setAddressLine2(order.getAddressLine2());
+                dto.setCity(order.getCity());
+                dto.setState(order.getState());
+                dto.setPincode(order.getPincode());
+                return dto;
             }).collect(Collectors.toList());
 
             return ResponseEntity.ok(responseDtos);
@@ -245,6 +253,13 @@ public class OrderController {
                     order.getCreatedAt(),
                     itemDtos
             );
+            responseDto.setFullName(order.getFullName());
+            responseDto.setPhoneNumber(order.getPhoneNumber());
+            responseDto.setAddressLine1(order.getAddressLine1());
+            responseDto.setAddressLine2(order.getAddressLine2());
+            responseDto.setCity(order.getCity());
+            responseDto.setState(order.getState());
+            responseDto.setPincode(order.getPincode());
 
             return ResponseEntity.ok(responseDto);
         } catch (IllegalArgumentException e) {
@@ -302,7 +317,7 @@ public class OrderController {
 
     @PostMapping("/checkout")
     @Transactional
-    public ResponseEntity<?> checkout(Authentication authentication) {
+    public ResponseEntity<?> checkout(@RequestBody(required = false) Map<String, String> addressData, Authentication authentication) {
         try {
             User user = getAuthenticatedUser(authentication);
             List<CartItem> cartItems = cartItemRepository.findByUserUserId(user.getUserId());
@@ -323,6 +338,17 @@ public class OrderController {
             String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             LocalDateTime now = LocalDateTime.now();
             Order order = new Order(orderId, user, grandTotal, OrderStatus.SUCCESS, now, now);
+
+            if (addressData != null) {
+                order.setFullName(addressData.get("fullName"));
+                order.setPhoneNumber(addressData.get("phoneNumber"));
+                order.setAddressLine1(addressData.get("addressLine1"));
+                order.setAddressLine2(addressData.get("addressLine2"));
+                order.setCity(addressData.get("city"));
+                order.setState(addressData.get("state"));
+                order.setPincode(addressData.get("pincode"));
+            }
+
             Order savedOrder = orderRepository.save(order);
 
             for (CartItem item : cartItems) {

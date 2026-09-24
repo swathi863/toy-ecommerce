@@ -281,10 +281,11 @@ export const removeCartItemApi = async (cartItemId) => {
 
 /* Order APIs (Protected) */
 
-export const checkoutApi = async () => {
+export const checkoutApi = async (addressData) => {
   const response = await fetch(`${API_BASE_URL}/orders/checkout`, {
     method: 'POST',
-    headers: getAuthHeaders()
+    headers: getAuthHeaders(),
+    body: addressData ? JSON.stringify(addressData) : undefined
   });
 
   const data = await response.json();

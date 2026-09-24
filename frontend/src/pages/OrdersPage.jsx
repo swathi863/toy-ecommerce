@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMyOrdersApi, requestReturnItemApi } from '../services/apiService';
-import { ArrowLeft, Package, CheckCircle2, Clock, XCircle, Truck, RotateCcw, AlertTriangle, ShieldCheck, Calendar } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle2, Clock, XCircle, Truck, RotateCcw, AlertTriangle, ShieldCheck, Calendar, MapPin } from 'lucide-react';
 
 export default function OrdersPage({ user, onShowToast }) {
   const navigate = useNavigate();
@@ -429,6 +429,29 @@ export default function OrdersPage({ user, onShowToast }) {
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Item details processed.</div>
                   )}
                 </div>
+
+                {/* Delivery Address Box */}
+                {(order.fullName || order.addressLine1) && (
+                  <div style={{
+                    backgroundColor: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    padding: '0.85rem 1rem',
+                    marginBottom: '1rem',
+                    fontSize: '0.88rem'
+                  }}>
+                    <div style={{ fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <MapPin size={16} color="var(--secondary-orange)" />
+                      <span>Delivery Address</span>
+                    </div>
+                    <div style={{ color: 'var(--text-body)', lineHeight: 1.5 }}>
+                      <div><strong>{order.fullName}</strong> {order.phoneNumber && <span style={{ color: 'var(--text-muted)' }}>(📞 {order.phoneNumber})</span>}</div>
+                      <div>{order.addressLine1}</div>
+                      {order.addressLine2 && <div>{order.addressLine2}</div>}
+                      <div>{order.city}{order.city && order.state ? ', ' : ''}{order.state}{order.pincode ? ` - ${order.pincode}` : ''}</div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Order Summary Footer */}
                 <div style={{

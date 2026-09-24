@@ -126,6 +126,16 @@ public class PaymentService {
         order.setStatus(OrderStatus.SUCCESS);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
+
+        // Save delivery address fields
+        order.setFullName(request.getFullName());
+        order.setPhoneNumber(request.getPhoneNumber());
+        order.setAddressLine1(request.getAddressLine1());
+        order.setAddressLine2(request.getAddressLine2());
+        order.setCity(request.getCity());
+        order.setState(request.getState());
+        order.setPincode(request.getPincode());
+
         Order savedOrder = orderRepository.save(order);
 
         // Copy cart items into order_items table

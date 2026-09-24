@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCartApi, updateCartQuantityApi, removeCartItemApi, createPaymentOrderApi, verifyPaymentApi } from '../services/apiService';
-import { Trash2, ArrowLeft, ShoppingBag, CheckCircle2, CreditCard, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Trash2, ArrowLeft, ShoppingBag, CheckCircle2, CreditCard, ShieldCheck, AlertCircle, MapPin } from 'lucide-react';
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -25,6 +25,63 @@ export default function CartPage({ user, onCartUpdated, onShowToast }) {
   const [checkoutSuccess, setCheckoutSuccess] = useState(null);
   const [paying, setPaying] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+
+  // Delivery Address State
+  const [address, setAddress] = useState({
+    fullName: user?.name || user?.userName || '',
+    phoneNumber: user?.phoneNumber || '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    pincode: ''
+  });
+  const [addressErrors, setAddressErrors] = useState({});
+
+  useEffect(() => {
+    if (user) {
+      setAddress(prev => ({
+        ...prev,
+        fullName: prev.fullName || user.name || user.userName || '',
+        phoneNumber: prev.phoneNumber || user.phoneNumber || ''
+      }));
+    }
+  }, [user]);
+
+  const validateAddress = () => {
+    const errs = {};
+
+    if (!address.fullName.trim()) {
+      errs.fullName = 'Full Name is required.';
+    }
+
+    if (!address.phoneNumber.trim()) {
+      errs.phoneNumber = 'Phone Number is required.';
+    } else if (!/^[0-9+\-\s()]{7,15}$/.test(address.phoneNumber.trim())) {
+      errs.phoneNumber = 'Please enter a valid phone number.';
+    }
+
+    if (!address.addressLine1.trim()) {
+      errs.addressLine1 = 'Address Line 1 is required.';
+    }
+
+    if (!address.city.trim()) {
+      errs.city = 'City is required.';
+    }
+
+    if (!address.state.trim()) {
+      errs.state = 'State is required.';
+    }
+
+    if (!address.pincode.trim()) {
+      errs.pincode = 'Pincode is required.';
+    } else if (!/^\d{6}$/.test(address.pincode.trim())) {
+      errs.pincode = 'Pincode must be exactly 6 digits.';
+    }
+
+    setAddressErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const fetchCart = async () => {
     if (!user) {
@@ -80,6 +137,11 @@ export default function CartPage({ user, onCartUpdated, onShowToast }) {
       return;
     }
 
+    if (!validateAddress()) {
+      setPaymentError('Please fill in all required delivery address fields correctly.');
+      return;
+    }
+
     try {
       setPaying(true);
 
@@ -104,8 +166,9 @@ export default function CartPage({ user, onCartUpdated, onShowToast }) {
         name: '🧸 Toyland',
         description: 'Toyland Order Payment (Test Mode)',
         prefill: {
-          name: user?.name || '',
+          name: address.fullName || user?.name || '',
           email: user?.email || '',
+          contact: address.phoneNumber || ''
         },
         theme: {
           color: '#243B6B'
@@ -113,11 +176,18 @@ export default function CartPage({ user, onCartUpdated, onShowToast }) {
         handler: async function (response) {
           try {
             setPaying(true);
-            // Step 3: Verify payment signature on backend
+            // Step 3: Verify payment signature on backend with address
             const verifyRes = await verifyPaymentApi({
               razorpayOrderId: response.razorpay_order_id || orderData.razorpayOrderId || 'order_test_mock',
               razorpayPaymentId: response.razorpay_payment_id || 'pay_test_mock',
-              razorpaySignature: response.razorpay_signature || 'sig_test_mock'
+              razorpaySignature: response.razorpay_signature || 'sig_test_mock',
+              fullName: address.fullName.trim(),
+              phoneNumber: address.phoneNumber.trim(),
+              addressLine1: address.addressLine1.trim(),
+              addressLine2: address.addressLine2.trim(),
+              city: address.city.trim(),
+              state: address.state.trim(),
+              pincode: address.pincode.trim()
             });
 
             setCheckoutSuccess(verifyRes);
@@ -336,9 +406,150 @@ export default function CartPage({ user, onCartUpdated, onShowToast }) {
               );
             })}
 
-            {/* Price Breakdown Sidebar / Summary */}
+            {/* Delivery Address Section */}
             <div style={{
               marginTop: '2rem',
+              padding: '1.5rem',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 2px 8px rgba(36, 59, 107, 0.04)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#243B6B', fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.6rem' }}>
+                <MapPin size={20} color="#F59E0B" />
+                <span>Delivery Address</span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                {/* Full Name */}
+                <div className={`field-group ${addressErrors.fullName ? 'is-invalid' : ''}`}>
+                  <label className="field-label" htmlFor="addr-fullname">Full Name *</label>
+                  <input
+                    id="addr-fullname"
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter full name"
+                    value={address.fullName}
+                    onChange={(e) => {
+                      setAddress(prev => ({ ...prev, fullName: e.target.value }));
+                      if (addressErrors.fullName) setAddressErrors(prev => ({ ...prev, fullName: '' }));
+                    }}
+                    disabled={paying}
+                  />
+                  {addressErrors.fullName && <div className="field-error-text"><AlertCircle size={14} /><span>{addressErrors.fullName}</span></div>}
+                </div>
+
+                {/* Phone Number */}
+                <div className={`field-group ${addressErrors.phoneNumber ? 'is-invalid' : ''}`}>
+                  <label className="field-label" htmlFor="addr-phone">Phone Number *</label>
+                  <input
+                    id="addr-phone"
+                    type="tel"
+                    className="field-input"
+                    placeholder="Enter phone number"
+                    value={address.phoneNumber}
+                    onChange={(e) => {
+                      setAddress(prev => ({ ...prev, phoneNumber: e.target.value }));
+                      if (addressErrors.phoneNumber) setAddressErrors(prev => ({ ...prev, phoneNumber: '' }));
+                    }}
+                    disabled={paying}
+                  />
+                  {addressErrors.phoneNumber && <div className="field-error-text"><AlertCircle size={14} /><span>{addressErrors.phoneNumber}</span></div>}
+                </div>
+
+                {/* Address Line 1 */}
+                <div className={`field-group ${addressErrors.addressLine1 ? 'is-invalid' : ''}`} style={{ gridColumn: '1 / -1' }}>
+                  <label className="field-label" htmlFor="addr-line1">Address Line 1 (House No., Street) *</label>
+                  <input
+                    id="addr-line1"
+                    type="text"
+                    className="field-input"
+                    placeholder="House No., Street, Area"
+                    value={address.addressLine1}
+                    onChange={(e) => {
+                      setAddress(prev => ({ ...prev, addressLine1: e.target.value }));
+                      if (addressErrors.addressLine1) setAddressErrors(prev => ({ ...prev, addressLine1: '' }));
+                    }}
+                    disabled={paying}
+                  />
+                  {addressErrors.addressLine1 && <div className="field-error-text"><AlertCircle size={14} /><span>{addressErrors.addressLine1}</span></div>}
+                </div>
+
+                {/* Address Line 2 */}
+                <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="field-label" htmlFor="addr-line2">Address Line 2 (Apartment, Landmark) <span style={{ fontWeight: 400, color: '#64748B' }}>(Optional)</span></label>
+                  <input
+                    id="addr-line2"
+                    type="text"
+                    className="field-input"
+                    placeholder="Apartment, Landmark"
+                    value={address.addressLine2}
+                    onChange={(e) => setAddress(prev => ({ ...prev, addressLine2: e.target.value }))}
+                    disabled={paying}
+                  />
+                </div>
+
+                {/* City */}
+                <div className={`field-group ${addressErrors.city ? 'is-invalid' : ''}`}>
+                  <label className="field-label" htmlFor="addr-city">City *</label>
+                  <input
+                    id="addr-city"
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter city"
+                    value={address.city}
+                    onChange={(e) => {
+                      setAddress(prev => ({ ...prev, city: e.target.value }));
+                      if (addressErrors.city) setAddressErrors(prev => ({ ...prev, city: '' }));
+                    }}
+                    disabled={paying}
+                  />
+                  {addressErrors.city && <div className="field-error-text"><AlertCircle size={14} /><span>{addressErrors.city}</span></div>}
+                </div>
+
+                {/* State */}
+                <div className={`field-group ${addressErrors.state ? 'is-invalid' : ''}`}>
+                  <label className="field-label" htmlFor="addr-state">State *</label>
+                  <input
+                    id="addr-state"
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter state"
+                    value={address.state}
+                    onChange={(e) => {
+                      setAddress(prev => ({ ...prev, state: e.target.value }));
+                      if (addressErrors.state) setAddressErrors(prev => ({ ...prev, state: '' }));
+                    }}
+                    disabled={paying}
+                  />
+                  {addressErrors.state && <div className="field-error-text"><AlertCircle size={14} /><span>{addressErrors.state}</span></div>}
+                </div>
+
+                {/* Pincode */}
+                <div className={`field-group ${addressErrors.pincode ? 'is-invalid' : ''}`}>
+                  <label className="field-label" htmlFor="addr-pincode">Pincode *</label>
+                  <input
+                    id="addr-pincode"
+                    type="text"
+                    maxLength={6}
+                    className="field-input"
+                    placeholder="6-digit pincode"
+                    value={address.pincode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setAddress(prev => ({ ...prev, pincode: val }));
+                      if (addressErrors.pincode) setAddressErrors(prev => ({ ...prev, pincode: '' }));
+                    }}
+                    disabled={paying}
+                  />
+                  {addressErrors.pincode && <div className="field-error-text"><AlertCircle size={14} /><span>{addressErrors.pincode}</span></div>}
+                </div>
+              </div>
+            </div>
+
+            {/* Price Breakdown Sidebar / Summary */}
+            <div style={{
+              marginTop: '1.5rem',
               padding: '1.5rem',
               backgroundColor: '#F8FAFC',
               borderRadius: '12px',
